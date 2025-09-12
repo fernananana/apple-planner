@@ -82,10 +82,6 @@ const Login = ({ onSuccess }: LoginProps) => {
               {loading ? 'Verificando...' : 'Iniciar Sesión'}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Usuario: <strong>Familia</strong></p>
-            <p>Contraseña: <strong>viggo</strong></p>
-          </div>
         </CardContent>
       </Card>
     </div>
