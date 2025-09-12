@@ -1,14 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from 'react';
+import { loadAuth, saveAuth } from '@/lib/storage';
+import Login from '@/components/Login';
+import Calendar from '@/components/Calendar';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Cargar estado de autenticación al iniciar
+    const authState = loadAuth();
+    setIsAuthenticated(authState);
+  }, []);
+
+  const handleLoginSuccess = () => {
+    saveAuth(true);
+    setIsAuthenticated(true);
+  };
+
+  // Mostrar loading mientras verifica autenticación
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
+          <p className="text-muted-foreground">Cargando calendario familiar...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Mostrar login si no está autenticado
+  if (!isAuthenticated) {
+    return <Login onSuccess={handleLoginSuccess} />;
+  }
+
+  // Mostrar aplicación principal si está autenticado
+  return <Calendar />;
 };
 
 export default Index;
