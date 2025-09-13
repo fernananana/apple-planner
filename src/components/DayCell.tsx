@@ -68,21 +68,46 @@ const DayCell = ({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragOver(false);
+    e.stopPropagation();
+    
+    // Solo quitar el estado de drag over si realmente salimos del contenedor principal
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(false);
     
     const data = e.dataTransfer.getData('text/plain');
+    console.log('Drop data received:', data); // Debug log
+    
+    if (!data) {
+      console.warn('No drag data received');
+      return;
+    }
+    
     try {
       const dropData = JSON.parse(data);
+      console.log('Parsed drop data:', dropData); // Debug log
       
       if (dropData.type === 'suggested') {
         // Crear nueva tarea desde sugerida
@@ -93,11 +118,19 @@ const DayCell = ({
           notas: '',
           completada: false
         };
+        console.log('Creating new task from suggested:', nuevaTarea); // Debug log
         onTareasChange([...tareas, nuevaTarea]);
       } else if (dropData.type === 'task') {
         // Mover tarea existente
         const tareaExistente = dropData.tarea as Tarea;
         const tareaYaExiste = tareas.some(t => t.id === tareaExistente.id);
+        
+        console.log('Moving task:', {
+          taskId: tareaExistente.id,
+          sourceDay: dropData.sourceDay,
+          targetDay: day,
+          taskExists: tareaYaExiste
+        }); // Debug log
         
         if (!tareaYaExiste && dropData.sourceDay !== day) {
           // Añadir la tarea a este día
@@ -111,17 +144,18 @@ const DayCell = ({
     } catch (error) {
       console.error('Error al procesar drop:', error);
     }
-  }, [tareas, miembroActivo, onTareasChange]);
+  }, [tareas, miembroActivo, onTareasChange, onMoverTarea, day]);
 
   return (
     <div 
       className={`
-        h-32 border rounded-lg p-2 bg-card transition-all duration-200
+        relative h-32 border rounded-lg p-2 bg-card transition-all duration-200
         ${isToday ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
-        ${isDragOver ? 'drag-over' : ''}
+        ${isDragOver ? 'ring-2 ring-primary border-primary bg-primary/20' : ''}
         ${tareas.length === 0 ? 'min-h-[128px]' : ''}
       `}
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >

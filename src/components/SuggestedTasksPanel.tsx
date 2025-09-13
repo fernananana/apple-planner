@@ -41,10 +41,12 @@ const SuggestedTasksPanel = ({
   }, [sugeridas, onSugeridasChange]);
 
   const handleDragStart = useCallback((e: React.DragEvent, texto: string) => {
-    e.dataTransfer.setData('text/plain', JSON.stringify({
+    const dragData = {
       type: 'suggested',
       texto: texto
-    }));
+    };
+    console.log('Starting drag from suggested tasks:', dragData); // Debug log
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'copy';
   }, []);
 

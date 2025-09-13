@@ -141,11 +141,16 @@
   
   /* Drag states */
   .dragging {
-    @apply scale-105 rotate-2 shadow-apple-lg;
+    @apply scale-105 rotate-2 shadow-apple-lg opacity-80 z-50;
   }
   
   .drag-over {
-    @apply ring-2 ring-primary/20 bg-primary/5;
+    @apply ring-2 ring-primary border-primary bg-primary/10;
+  }
+  
+  /* Drag drop zone indicator */
+  .drop-zone-active {
+    @apply ring-2 ring-dashed ring-primary bg-primary/5 animate-pulse;
   }
   
   /* Member color variants */

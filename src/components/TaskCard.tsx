@@ -27,11 +27,13 @@ const TaskCard = ({
     if (!isDraggable) return;
     
     setIsDragging(true);
-    e.dataTransfer.setData('text/plain', JSON.stringify({
+    const dragData = {
       type: 'task',
       tarea: tarea,
       sourceDay: sourceDay // El día específico de donde viene
-    }));
+    };
+    console.log('Starting drag from task:', dragData); // Debug log
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
   }, [tarea, isDraggable, sourceDay]);
 
