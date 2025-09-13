@@ -63,6 +63,25 @@ const Calendar = () => {
     saveSugeridas(newSugeridas);
   }, []);
 
+  // Función para remover una tarea de un día específico después de moverla
+  const removerTareaDeDia = useCallback((tareaId: string, diaOrigen: number) => {
+    const updated = { ...tareas };
+    
+    if (updated[diaOrigen]) {
+      const tareaIndex = updated[diaOrigen].findIndex(t => t.id === tareaId);
+      if (tareaIndex !== -1) {
+        updated[diaOrigen].splice(tareaIndex, 1);
+        
+        // Si el día origen queda vacío, eliminarlo
+        if (updated[diaOrigen].length === 0) {
+          delete updated[diaOrigen];
+        }
+        
+        updateTareas(updated);
+      }
+    }
+  }, [tareas, updateTareas]);
+
   const borrarDia = useCallback((day: number) => {
     const newTareas = { ...tareas };
     delete newTareas[day];
@@ -221,15 +240,16 @@ const Calendar = () => {
                     year={currentYear}
                     tareas={tareas[day] || []}
                     miembroActivo={miembroActivo}
-                    onTareasChange={(newTareas) => {
-                      const updated = { ...tareas };
-                      if (newTareas.length === 0) {
-                        delete updated[day];
-                      } else {
-                        updated[day] = newTareas;
-                      }
-                      updateTareas(updated);
-                    }}
+                     onTareasChange={(newTareas) => {
+                       const updated = { ...tareas };
+                       if (newTareas.length === 0) {
+                         delete updated[day];
+                       } else {
+                         updated[day] = newTareas;
+                       }
+                       updateTareas(updated);
+                     }}
+                     onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
                     onEditTarea={setModalTarea}
                     onBorrarDia={() => borrarDia(day)}
                     isToday={esHoy(day, currentMonth, currentYear)}

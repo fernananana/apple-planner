@@ -25,6 +25,7 @@ interface DayCellProps {
   onTareasChange: (tareas: Tarea[]) => void;
   onEditTarea: (tarea: Tarea) => void;
   onBorrarDia: () => void;
+  onMoverTarea?: (tareaId: string, diaOrigen: number) => void;
   isToday: boolean;
 }
 
@@ -37,6 +38,7 @@ const DayCell = ({
   onTareasChange,
   onEditTarea,
   onBorrarDia,
+  onMoverTarea,
   isToday
 }: DayCellProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -95,7 +97,16 @@ const DayCell = ({
       } else if (dropData.type === 'task') {
         // Mover tarea existente
         const tareaExistente = dropData.tarea as Tarea;
-        onTareasChange([...tareas, tareaExistente]);
+        const tareaYaExiste = tareas.some(t => t.id === tareaExistente.id);
+        
+        if (!tareaYaExiste && dropData.sourceDay !== day) {
+          // Añadir la tarea a este día
+          onTareasChange([...tareas, tareaExistente]);
+          // Llamar la función para remover del día origen
+          if (onMoverTarea && dropData.sourceDay !== undefined) {
+            onMoverTarea(tareaExistente.id, dropData.sourceDay);
+          }
+        }
       }
     } catch (error) {
       console.error('Error al procesar drop:', error);
@@ -169,6 +180,7 @@ const DayCell = ({
             onUpdate={(updates) => updateTarea(tarea.id, updates)}
             onDelete={() => deleteTarea(tarea.id)}
             onEdit={() => onEditTarea(tarea)}
+            sourceDay={day}
           />
         ))}
       </div>

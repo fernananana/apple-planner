@@ -10,6 +10,7 @@ interface TaskCardProps {
   onDelete: () => void;
   onEdit: () => void;
   isDraggable?: boolean;
+  sourceDay?: number;
 }
 
 const TaskCard = ({ 
@@ -17,7 +18,8 @@ const TaskCard = ({
   onUpdate, 
   onDelete, 
   onEdit,
-  isDraggable = true 
+  isDraggable = true,
+  sourceDay
 }: TaskCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -27,10 +29,11 @@ const TaskCard = ({
     setIsDragging(true);
     e.dataTransfer.setData('text/plain', JSON.stringify({
       type: 'task',
-      tarea: tarea
+      tarea: tarea,
+      sourceDay: sourceDay // El día específico de donde viene
     }));
     e.dataTransfer.effectAllowed = 'move';
-  }, [tarea, isDraggable]);
+  }, [tarea, isDraggable, sourceDay]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
