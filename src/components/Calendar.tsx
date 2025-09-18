@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, LogOut, Trash2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { DIAS_SEMANA, MESES, getPrimerDiaMes, getDiasEnMes, esHoy } from '@/lib/
 import DayCell from './DayCell';
 import SuggestedTasksPanel from './SuggestedTasksPanel';
 import NotesModal from './NotesModal';
+import DayModal from './DayModal';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -28,7 +29,17 @@ const Calendar = () => {
   const [tareas, setTareas] = useState<TareasPorDia>(loadTareas);
   const [sugeridas, setSugeridas] = useState<Categorias>(loadSugeridas);
   const [modalTarea, setModalTarea] = useState<Tarea | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const { toast } = useToast();
+
+  // Auto-guardar cuando cambien las tareas o sugeridas
+  useEffect(() => {
+    saveTareas(tareas);
+  }, [tareas]);
+
+  useEffect(() => {
+    saveSugeridas(sugeridas);
+  }, [sugeridas]);
 
   const handleLogout = useCallback(() => {
     saveAuth(false);
@@ -174,6 +185,14 @@ const Calendar = () => {
                 >
                   👨 Papá
                 </Button>
+                <Button
+                  size="sm"
+                  className={miembroActivo === 'ambos' ? 'btn-ambos' : ''}
+                  variant={miembroActivo === 'ambos' ? 'default' : 'outline'}
+                  onClick={() => setMiembroActivo('ambos')}
+                >
+                  👨‍👩 Ambos
+                </Button>
               </div>
             </div>
 
@@ -231,7 +250,7 @@ const Calendar = () => {
                   <div key={`empty-${index}`} className="h-32"></div>
                 ))}
                 
-                {/* Días del mes */}
+                 {/* Días del mes */}
                 {dias.map((day) => (
                   <DayCell
                     key={day}
@@ -252,6 +271,7 @@ const Calendar = () => {
                      onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
                     onEditTarea={setModalTarea}
                     onBorrarDia={() => borrarDia(day)}
+                    onDayClick={() => setSelectedDay(day)}
                     isToday={esHoy(day, currentMonth, currentYear)}
                   />
                 ))}
@@ -289,6 +309,30 @@ const Calendar = () => {
             setModalTarea(null);
           }}
           onClose={() => setModalTarea(null)}
+        />
+      )}
+
+      {/* Modal de día completo */}
+      {selectedDay && (
+        <DayModal
+          day={selectedDay}
+          month={currentMonth}
+          year={currentYear}
+          tareas={tareas[selectedDay] || []}
+          miembroActivo={miembroActivo}
+          isOpen={!!selectedDay}
+          onClose={() => setSelectedDay(null)}
+          onTareasChange={(newTareas) => {
+            const updated = { ...tareas };
+            if (newTareas.length === 0) {
+              delete updated[selectedDay];
+            } else {
+              updated[selectedDay] = newTareas;
+            }
+            updateTareas(updated);
+          }}
+          onEditTarea={setModalTarea}
+          onBorrarDia={() => borrarDia(selectedDay)}
         />
       )}
     </div>

@@ -170,6 +170,10 @@
     @apply bg-[hsl(var(--papa-primary))] text-white hover:bg-[hsl(var(--papa-primary))]/90;
   }
   
+  .btn-ambos {
+    @apply bg-purple-500 hover:bg-purple-600 text-white;
+  }
+  
   /* Completed tasks */
   .task-completed {
     @apply bg-[hsl(var(--completed-secondary))] border-[hsl(var(--completed))] text-[hsl(var(--completed))] line-through opacity-60;

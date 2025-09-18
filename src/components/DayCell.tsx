@@ -26,6 +26,7 @@ interface DayCellProps {
   onEditTarea: (tarea: Tarea) => void;
   onBorrarDia: () => void;
   onMoverTarea?: (tareaId: string, diaOrigen: number) => void;
+  onDayClick: () => void;
   isToday: boolean;
 }
 
@@ -39,6 +40,7 @@ const DayCell = ({
   onEditTarea,
   onBorrarDia,
   onMoverTarea,
+  onDayClick,
   isToday
 }: DayCellProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -161,9 +163,12 @@ const DayCell = ({
     >
       {/* Número del día y controles */}
       <div className="flex items-center justify-between mb-1">
-        <span className={`text-sm font-medium ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}>
+        <button 
+          className={`text-sm font-medium hover:underline cursor-pointer ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}
+          onClick={onDayClick}
+        >
           {day}
-        </span>
+        </button>
         
         <div className="flex gap-1">
           <Button

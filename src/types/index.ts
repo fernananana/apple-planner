@@ -1,4 +1,4 @@
-export type Miembro = 'mama' | 'papa';
+export type Miembro = 'mama' | 'papa' | 'ambos';
 
 export interface Tarea {
   id: string;
