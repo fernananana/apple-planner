@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, LogOut, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Eye, Grid3X3, Calendar as CalendarIcon } from 'lucide-react';
 import { Miembro, Tarea, TareasPorDia, Categorias } from '@/types';
-import { saveTareas, saveAuth, loadTareas, loadSugeridas, saveSugeridas } from '@/lib/storage';
+import { saveTareas, loadTareas, loadSugeridas, saveSugeridas } from '@/lib/storage';
 import { DIAS_SEMANA, MESES, getPrimerDiaMes, getDiasEnMes, esHoy } from '@/lib/calendar-utils';
 import DayCell from './DayCell';
 import SuggestedTasksPanel from './SuggestedTasksPanel';
@@ -22,29 +22,30 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-const Calendar = () => {
+interface CalendarProps {
+  tareas: TareasPorDia;
+  sugeridas: Categorias;
+  miembroActivo: Miembro;
+  onTareasChange: (tareas: TareasPorDia) => void;
+  onSugeridasChange: (sugeridas: Categorias) => void;
+  onMiembroChange: (miembro: Miembro) => void;
+}
+
+const Calendar = ({ 
+  tareas, 
+  sugeridas, 
+  miembroActivo, 
+  onTareasChange, 
+  onSugeridasChange, 
+  onMiembroChange 
+}: CalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [miembroActivo, setMiembroActivo] = useState<Miembro>('mama');
-  const [tareas, setTareas] = useState<TareasPorDia>(loadTareas);
-  const [sugeridas, setSugeridas] = useState<Categorias>(loadSugeridas);
   const [modalTarea, setModalTarea] = useState<Tarea | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [vista, setVista] = useState<'diaria' | 'semanal' | 'mensual'>('mensual');
   const { toast } = useToast();
 
-  // Auto-guardar cuando cambien las tareas o sugeridas
-  useEffect(() => {
-    saveTareas(tareas);
-  }, [tareas]);
-
-  useEffect(() => {
-    saveSugeridas(sugeridas);
-  }, [sugeridas]);
-
-  const handleLogout = useCallback(() => {
-    saveAuth(false);
-    window.location.reload();
-  }, []);
 
   const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     if (direction === 'prev') {
@@ -65,14 +66,12 @@ const Calendar = () => {
   }, [currentMonth]);
 
   const updateTareas = useCallback((newTareas: TareasPorDia) => {
-    setTareas(newTareas);
-    saveTareas(newTareas);
-  }, []);
+    onTareasChange(newTareas);
+  }, [onTareasChange]);
 
   const updateSugeridas = useCallback((newSugeridas: Categorias) => {
-    setSugeridas(newSugeridas);
-    saveSugeridas(newSugeridas);
-  }, []);
+    onSugeridasChange(newSugeridas);
+  }, [onSugeridasChange]);
 
   // Función para remover una tarea de un día específico después de moverla
   const removerTareaDeDia = useCallback((tareaId: string, diaOrigen: number) => {
@@ -118,25 +117,48 @@ const Calendar = () => {
   const espaciosVacios = Array.from({ length: primerDia }, (_, i) => i);
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <Card className="shadow-apple">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold">
-                Calendario Familiar 👨‍👩‍👧‍👦
-              </CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Cerrar sesión
-              </Button>
-            </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Calendario</h1>
+          <p className="text-muted-foreground">{MESES[currentMonth]} {currentYear}</p>
+        </div>
+        
+        {/* Controles de Vista */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={vista === 'diaria' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setVista('diaria')}
+            className="gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Día
+          </Button>
+          <Button
+            variant={vista === 'semanal' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setVista('semanal')}
+            className="gap-2"
+          >
+            <Grid3X3 className="w-4 h-4" />
+            Semana
+          </Button>
+          <Button
+            variant={vista === 'mensual' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setVista('mensual')}
+            className="gap-2"
+          >
+            <CalendarIcon className="w-4 h-4" />
+            Mes
+          </Button>
+        </div>
+      </div>
+
+      <Card className="shadow-apple">
+        <CardHeader>
             
             {/* Navegación del mes */}
             <div className="flex items-center justify-between">
@@ -173,7 +195,7 @@ const Calendar = () => {
                   size="sm"
                   className={miembroActivo === 'mama' ? 'btn-mama' : ''}
                   variant={miembroActivo === 'mama' ? 'default' : 'outline'}
-                  onClick={() => setMiembroActivo('mama')}
+                  onClick={() => onMiembroChange('mama')}
                 >
                   👩 Mamá
                 </Button>
@@ -181,7 +203,7 @@ const Calendar = () => {
                   size="sm"
                   className={miembroActivo === 'papa' ? 'btn-papa' : ''}
                   variant={miembroActivo === 'papa' ? 'default' : 'outline'}
-                  onClick={() => setMiembroActivo('papa')}
+                  onClick={() => onMiembroChange('papa')}
                 >
                   👨 Papá
                 </Button>
@@ -189,7 +211,7 @@ const Calendar = () => {
                   size="sm"
                   className={miembroActivo === 'ambos' ? 'btn-ambos' : ''}
                   variant={miembroActivo === 'ambos' ? 'default' : 'outline'}
-                  onClick={() => setMiembroActivo('ambos')}
+                  onClick={() => onMiembroChange('ambos')}
                 >
                   👨‍👩 Ambos
                 </Button>
@@ -224,7 +246,6 @@ const Calendar = () => {
             </div>
           </CardHeader>
         </Card>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Calendario principal */}

@@ -48,7 +48,8 @@ const DayModal = ({
       texto: `Nueva tarea`,
       miembro: miembroActivo,
       notas: '',
-      completada: false
+      completada: false,
+      fechaCreacion: new Date().toISOString()
     };
     onTareasChange([...tareas, nuevaTarea]);
   }, [tareas, miembroActivo, onTareasChange]);

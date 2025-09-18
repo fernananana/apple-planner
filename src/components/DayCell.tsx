@@ -51,7 +51,8 @@ const DayCell = ({
       texto: `Nueva tarea`,
       miembro: miembroActivo,
       notas: '',
-      completada: false
+      completada: false,
+      fechaCreacion: new Date().toISOString()
     };
     onTareasChange([...tareas, nuevaTarea]);
   }, [tareas, miembroActivo, onTareasChange]);
@@ -118,7 +119,8 @@ const DayCell = ({
           texto: dropData.texto,
           miembro: miembroActivo,
           notas: '',
-          completada: false
+          completada: false,
+          fechaCreacion: new Date().toISOString()
         };
         console.log('Creating new task from suggested:', nuevaTarea); // Debug log
         onTareasChange([...tareas, nuevaTarea]);
