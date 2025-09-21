@@ -22,6 +22,17 @@
     --primary: 218 85% 52%;
     --primary-foreground: 0 0% 100%;
     
+    /* Secondary colors */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 14% 13%;
+    
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 14% 13%;
+    
+    /* Popover and overlays */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 13%;
+    
     /* Family member colors */
     --mama-primary: 339 82% 74%;
     --mama-secondary: 339 100% 96%;
@@ -48,19 +59,12 @@
     --radius: 0.875rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -177,5 +181,26 @@
   /* Completed tasks */
   .task-completed {
     @apply bg-[hsl(var(--completed-secondary))] border-[hsl(var(--completed))] text-[hsl(var(--completed))] line-through opacity-60;
+  }
+
+  /* Fix for dropdown overlays */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
+  }
+  
+  [data-radix-select-content] {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    z-index: 50 !important;
+  }
+  
+  [data-radix-select-item] {
+    color: hsl(var(--card-foreground)) !important;
+  }
+  
+  [data-radix-select-item][data-highlighted] {
+    background: hsl(var(--accent)) !important;
+    color: hsl(var(--accent-foreground)) !important;
   }
 }

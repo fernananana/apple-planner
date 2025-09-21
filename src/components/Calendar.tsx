@@ -9,6 +9,7 @@ import DayCell from './DayCell';
 import SuggestedTasksPanel from './SuggestedTasksPanel';
 import NotesModal from './NotesModal';
 import DayModal from './DayModal';
+import EditTaskModal from './EditTaskModal';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -44,6 +45,7 @@ const Calendar = ({
   const [modalTarea, setModalTarea] = useState<Tarea | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [vista, setVista] = useState<'diaria' | 'semanal' | 'mensual'>('mensual');
+  const [editingTask, setEditingTask] = useState<Tarea | null>(null);
   const { toast } = useToast();
 
 
@@ -252,51 +254,109 @@ const Calendar = ({
         <div className="lg:col-span-3">
           <Card className="shadow-apple">
             <CardContent className="p-6">
-              {/* Cabeceras de días */}
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {DIAS_SEMANA.map((dia) => (
-                  <div 
-                    key={dia} 
-                    className="h-10 flex items-center justify-center font-medium text-muted-foreground"
-                  >
-                    {dia}
+              {vista === 'mensual' && (
+                <>
+                  {/* Cabeceras de días */}
+                  <div className="grid grid-cols-7 gap-1 mb-4">
+                    {DIAS_SEMANA.map((dia) => (
+                      <div 
+                        key={dia} 
+                        className="h-10 flex items-center justify-center font-medium text-muted-foreground"
+                      >
+                        {dia}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              {/* Días del calendario */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* Espacios vacíos al inicio */}
-                {espaciosVacios.map((_, index) => (
-                  <div key={`empty-${index}`} className="h-32"></div>
-                ))}
-                
-                 {/* Días del mes */}
-                {dias.map((day) => (
-                  <DayCell
-                    key={day}
-                    day={day}
-                    month={currentMonth}
-                    year={currentYear}
-                    tareas={tareas[day] || []}
-                    miembroActivo={miembroActivo}
-                     onTareasChange={(newTareas) => {
-                       const updated = { ...tareas };
-                       if (newTareas.length === 0) {
-                         delete updated[day];
-                       } else {
-                         updated[day] = newTareas;
-                       }
-                       updateTareas(updated);
-                     }}
-                     onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
-                    onEditTarea={setModalTarea}
-                    onBorrarDia={() => borrarDia(day)}
-                    onDayClick={() => setSelectedDay(day)}
-                    isToday={esHoy(day, currentMonth, currentYear)}
-                  />
-                ))}
-              </div>
+                  {/* Días del calendario */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {/* Espacios vacíos al inicio */}
+                    {espaciosVacios.map((_, index) => (
+                      <div key={`empty-${index}`} className="h-32"></div>
+                    ))}
+                    
+                     {/* Días del mes */}
+                    {dias.map((day) => (
+                      <DayCell
+                        key={day}
+                        day={day}
+                        month={currentMonth}
+                        year={currentYear}
+                        tareas={tareas[day] || []}
+                        miembroActivo={miembroActivo}
+                         onTareasChange={(newTareas) => {
+                           const updated = { ...tareas };
+                           if (newTareas.length === 0) {
+                             delete updated[day];
+                           } else {
+                             updated[day] = newTareas;
+                           }
+                           updateTareas(updated);
+                         }}
+                         onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
+                        onEditTarea={setEditingTask}
+                        onBorrarDia={() => borrarDia(day)}
+                        onDayClick={() => setSelectedDay(day)}
+                        isToday={esHoy(day, currentMonth, currentYear)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {vista === 'semanal' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Vista Semanal</h3>
+                  <div className="grid grid-cols-7 gap-4">
+                    {DIAS_SEMANA.map((dia, index) => {
+                      const dayOfWeek = new Date().getDay();
+                      const startOfWeek = new Date();
+                      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek + index);
+                      const dayNum = startOfWeek.getDate();
+                      
+                      return (
+                        <div key={dia} className="space-y-2">
+                          <h4 className="font-medium text-center">{dia}</h4>
+                          <div className="min-h-40 p-2 border rounded-lg bg-muted/20">
+                            <div className="text-center font-semibold mb-2">{dayNum}</div>
+                            {(tareas[dayNum] || []).map((tarea) => (
+                              <div key={tarea.id} className="p-1 mb-1 text-xs bg-primary/10 rounded">
+                                {tarea.texto}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {vista === 'diaria' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Vista Diaria - {new Date().getDate()} de {MESES[currentMonth]}</h3>
+                  <div className="space-y-2">
+                    {(tareas[new Date().getDate()] || []).map((tarea) => (
+                      <div key={tarea.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{tarea.texto}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {tarea.miembro === 'mama' ? '👩 Mamá' : tarea.miembro === 'papa' ? '👨 Papá' : '👨‍👩 Ambos'}
+                          </span>
+                        </div>
+                        {tarea.notas && (
+                          <p className="text-sm text-muted-foreground mt-2">{tarea.notas}</p>
+                        )}
+                      </div>
+                    ))}
+                    {!(tareas[new Date().getDate()] || []).length && (
+                      <p className="text-center text-muted-foreground py-8">
+                        No hay tareas para hoy
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -352,8 +412,31 @@ const Calendar = ({
             }
             updateTareas(updated);
           }}
-          onEditTarea={setModalTarea}
+          onEditTarea={setEditingTask}
           onBorrarDia={() => borrarDia(selectedDay)}
+        />
+      )}
+
+      {/* Modal de edición de tarea */}
+      {editingTask && (
+        <EditTaskModal
+          tarea={editingTask}
+          isOpen={!!editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={(updatedTarea) => {
+            const day = Object.keys(tareas).find(key => 
+              tareas[parseInt(key)]?.some(t => t.id === updatedTarea.id)
+            );
+            if (day) {
+              const dayNum = parseInt(day);
+              const updatedTareas = tareas[dayNum].map(t => 
+                t.id === updatedTarea.id ? updatedTarea : t
+              );
+              const newTareas = { ...tareas, [dayNum]: updatedTareas };
+              updateTareas(newTareas);
+            }
+            setEditingTask(null);
+          }}
         />
       )}
     </div>

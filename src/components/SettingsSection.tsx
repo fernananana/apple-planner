@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { TareasPorDia, Categorias } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 interface SettingsSectionProps {
   tareas: TareasPorDia;
@@ -34,6 +36,12 @@ const SettingsSection = ({
   onLogout 
 }: SettingsSectionProps) => {
   const { toast } = useToast();
+  const [emails, setEmails] = useState<string[]>(['']);
+  const [tema, setTema] = useState('system');
+  const [vistaDefault, setVistaDefault] = useState('mensual');
+  const [mostrarFines, setMostrarFines] = useState(true);
+  const [semanaLunes, setSemanaLunes] = useState(true);
+  const [zonaHoraria, setZonaHoraria] = useState('madrid');
 
   const exportarDatos = () => {
     const datos = {
@@ -102,6 +110,23 @@ const SettingsSection = ({
       title: "Datos borrados",
       description: "Todos los datos han sido eliminados"
     });
+  };
+
+  const agregarEmail = () => {
+    setEmails([...emails, '']);
+  };
+
+  const actualizarEmail = (index: number, email: string) => {
+    const newEmails = [...emails];
+    newEmails[index] = email;
+    setEmails(newEmails);
+  };
+
+  const eliminarEmail = (index: number) => {
+    if (emails.length > 1) {
+      const newEmails = emails.filter((_, i) => i !== index);
+      setEmails(newEmails);
+    }
   };
 
   return (
@@ -179,6 +204,40 @@ const SettingsSection = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Correos electrónicos para notificaciones</Label>
+              {emails.map((email, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => actualizarEmail(index, e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    className="flex-1"
+                  />
+                  {emails.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => eliminarEmail(index)}
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={agregarEmail}
+                className="w-full"
+              >
+                + Agregar otro correo
+              </Button>
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between">
             <Label htmlFor="notif-tareas">Recordatorios de tareas</Label>
             <Switch id="notif-tareas" />
@@ -207,11 +266,11 @@ const SettingsSection = ({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="tema">Tema</Label>
-            <Select defaultValue="system">
-              <SelectTrigger>
+            <Select value={tema} onValueChange={setTema}>
+              <SelectTrigger className="bg-background">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border border-border z-50">
                 <SelectItem value="light">Claro</SelectItem>
                 <SelectItem value="dark">Oscuro</SelectItem>
                 <SelectItem value="system">Sistema</SelectItem>
@@ -221,11 +280,11 @@ const SettingsSection = ({
           
           <div className="space-y-2">
             <Label htmlFor="vista-default">Vista por defecto</Label>
-            <Select defaultValue="mensual">
-              <SelectTrigger>
+            <Select value={vistaDefault} onValueChange={setVistaDefault}>
+              <SelectTrigger className="bg-background">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border border-border z-50">
                 <SelectItem value="diaria">Diaria</SelectItem>
                 <SelectItem value="semanal">Semanal</SelectItem>
                 <SelectItem value="mensual">Mensual</SelectItem>
@@ -246,21 +305,29 @@ const SettingsSection = ({
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <Label htmlFor="mostrar-fines">Mostrar fines de semana</Label>
-            <Switch id="mostrar-fines" defaultChecked />
+            <Switch 
+              id="mostrar-fines" 
+              checked={mostrarFines}
+              onCheckedChange={setMostrarFines}
+            />
           </div>
           
           <div className="flex items-center justify-between">
             <Label htmlFor="semana-lunes">Semana comienza en lunes</Label>
-            <Switch id="semana-lunes" defaultChecked />
+            <Switch 
+              id="semana-lunes" 
+              checked={semanaLunes}
+              onCheckedChange={setSemanaLunes}
+            />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="zona-horaria">Zona horaria</Label>
-            <Select defaultValue="madrid">
-              <SelectTrigger>
+            <Select value={zonaHoraria} onValueChange={setZonaHoraria}>
+              <SelectTrigger className="bg-background">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border border-border z-50">
                 <SelectItem value="madrid">Madrid (GMT+1)</SelectItem>
                 <SelectItem value="canarias">Canarias (GMT+0)</SelectItem>
               </SelectContent>
