@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { loadAuth, loadTareas, loadSugeridas, saveTareas, saveSugeridas, saveAuth } from '@/lib/storage';
-import { Miembro, TareasPorDia, Categorias } from '@/types';
+import { useEffect } from 'react';
+import { useStore } from '@/store/useStore';
 import Login from '@/components/Login';
 import Navigation from '@/components/Navigation';
 import Calendar from '@/components/Calendar';
@@ -8,46 +7,19 @@ import Dashboard from '@/components/Dashboard';
 import TasksSection from '@/components/TasksSection';
 import MembersSection from '@/components/MembersSection';
 import SettingsSection from '@/components/SettingsSection';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [currentSection, setCurrentSection] = useState('dashboard');
-  const [miembroActivo, setMiembroActivo] = useState<Miembro>('mama');
-  const [tareas, setTareas] = useState<TareasPorDia>(loadTareas);
-  const [sugeridas, setSugeridas] = useState<Categorias>(loadSugeridas);
-
-  useEffect(() => {
-    const authStatus = loadAuth();
-    setIsAuthenticated(authStatus);
-  }, []);
-
-  // Auto-guardar cuando cambien las tareas o sugeridas
-  useEffect(() => {
-    saveTareas(tareas);
-  }, [tareas]);
-
-  useEffect(() => {
-    saveSugeridas(sugeridas);
-  }, [sugeridas]);
-
-  const handleLogout = () => {
-    saveAuth(false);
-    setIsAuthenticated(false);
-  };
-
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
+  const { 
+    isAuthenticated, 
+    currentSection, 
+    setCurrentSection,
+    logout 
+  } = useStore();
+  const isMobile = useMobile();
 
   if (!isAuthenticated) {
-    return <Login onSuccess={() => setIsAuthenticated(true)} />;
+    return <Login />;
   }
 
   const renderCurrentSection = () => {
@@ -55,49 +27,20 @@ const Index = () => {
       case 'dashboard':
         return (
           <Dashboard
-            tareas={tareas}
+            tareas={{}} // Will be handled by zustand
             currentMonth={new Date().getMonth()}
             currentYear={new Date().getFullYear()}
             onSectionChange={setCurrentSection}
           />
         );
       case 'calendar':
-        return (
-          <Calendar
-            tareas={tareas}
-            sugeridas={sugeridas}
-            miembroActivo={miembroActivo}
-            onTareasChange={setTareas}
-            onSugeridasChange={setSugeridas}
-            onMiembroChange={setMiembroActivo}
-          />
-        );
+        return <Calendar />;
       case 'tasks':
-        return (
-          <TasksSection
-            tareas={tareas}
-            onTareasChange={setTareas}
-            miembroActivo={miembroActivo}
-          />
-        );
+        return <TasksSection />;
       case 'members':
-        return (
-          <MembersSection
-            tareas={tareas}
-            miembroActivo={miembroActivo}
-            onMiembroChange={setMiembroActivo}
-          />
-        );
+        return <MembersSection />;
       case 'settings':
-        return (
-          <SettingsSection
-            tareas={tareas}
-            sugeridas={sugeridas}
-            onTareasChange={setTareas}
-            onSugeridasChange={setSugeridas}
-            onLogout={handleLogout}
-          />
-        );
+        return <SettingsSection onLogout={logout} />;
       default:
         return null;
     }
@@ -105,22 +48,25 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex flex-col md:flex-row">
-        {/* Navigation */}
-        <div className="md:w-64 md:flex-shrink-0">
-          <div className="md:fixed md:top-4 md:left-4 md:bottom-4 md:w-56">
-            <Navigation
-              currentSection={currentSection}
-              onSectionChange={setCurrentSection}
-            />
+      {isMobile ? (
+        <div className="flex flex-col h-screen">
+          <main className="flex-1 p-4 pb-20">
+            {renderCurrentSection()}
+          </main>
+          <Navigation />
+        </div>
+      ) : (
+        <div className="flex">
+          <div className="w-64 flex-shrink-0">
+            <div className="fixed top-4 left-4 bottom-4 w-56">
+              <Navigation />
+            </div>
           </div>
+          <main className="flex-1 ml-64 p-6">
+            {renderCurrentSection()}
+          </main>
         </div>
-
-        {/* Main Content */}
-        <div className="flex-1 md:ml-64 p-4 md:p-6">
-          {renderCurrentSection()}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

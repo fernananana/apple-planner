@@ -31,6 +31,7 @@ const Dashboard = ({ tareas, currentMonth, currentYear, onSectionChange }: Dashb
       mama: { total: 0, completadas: 0, pendientes: 0, porcentaje: 0 },
       papa: { total: 0, completadas: 0, pendientes: 0, porcentaje: 0 },
       ambos: { total: 0, completadas: 0, pendientes: 0, porcentaje: 0 },
+      viggo: { total: 0, completadas: 0, pendientes: 0, porcentaje: 0 },
     };
 
     todasLasTareas.forEach(tarea => {
@@ -62,6 +63,7 @@ const Dashboard = ({ tareas, currentMonth, currentYear, onSectionChange }: Dashb
     switch (miembro) {
       case 'mama': return '👩';
       case 'papa': return '👨';
+      case 'viggo': return '🧒';
       case 'ambos': return '👨‍👩';
     }
   };
@@ -70,6 +72,7 @@ const Dashboard = ({ tareas, currentMonth, currentYear, onSectionChange }: Dashb
     switch (miembro) {
       case 'mama': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
       case 'papa': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'viggo': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'ambos': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
     }
   };

@@ -1,442 +1,163 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Trash2, Eye, Grid3X3, Calendar as CalendarIcon } from 'lucide-react';
-import { Miembro, Tarea, TareasPorDia, Categorias } from '@/types';
-import { saveTareas, loadTareas, loadSugeridas, saveSugeridas } from '@/lib/storage';
-import { DIAS_SEMANA, MESES, getPrimerDiaMes, getDiasEnMes, esHoy } from '@/lib/calendar-utils';
-import DayCell from './DayCell';
+import { ChevronLeft, ChevronRight, Grid3X3, Calendar as CalendarIcon, Eye } from 'lucide-react';
+import { Tarea } from '@/types';
+import { useStore } from '@/store/useStore';
+import { CalendarHeader } from './calendar/CalendarHeader';
+import { CalendarGrid } from './calendar/CalendarGrid';
 import SuggestedTasksPanel from './SuggestedTasksPanel';
 import NotesModal from './NotesModal';
 import DayModal from './DayModal';
 import EditTaskModal from './EditTaskModal';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
-interface CalendarProps {
-  tareas: TareasPorDia;
-  sugeridas: Categorias;
-  miembroActivo: Miembro;
-  onTareasChange: (tareas: TareasPorDia) => void;
-  onSugeridasChange: (sugeridas: Categorias) => void;
-  onMiembroChange: (miembro: Miembro) => void;
-}
-
-const Calendar = ({ 
-  tareas, 
-  sugeridas, 
-  miembroActivo, 
-  onTareasChange, 
-  onSugeridasChange, 
-  onMiembroChange 
-}: CalendarProps) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+const Calendar = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [modalTarea, setModalTarea] = useState<Tarea | null>(null);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [vista, setVista] = useState<'diaria' | 'semanal' | 'mensual'>('mensual');
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [editingTask, setEditingTask] = useState<Tarea | null>(null);
   const { toast } = useToast();
+  
+  const { tareas, setTareas, activeView, setActiveView } = useStore();
 
-
-  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
-    if (direction === 'prev') {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(prev => prev - 1);
+  const handlePreviousMonth = useCallback(() => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (activeView === 'month') {
+        newDate.setMonth(prev.getMonth() - 1);
+      } else if (activeView === 'week') {
+        newDate.setDate(prev.getDate() - 7);
       } else {
-        setCurrentMonth(prev => prev - 1);
+        newDate.setDate(prev.getDate() - 1);
       }
-    } else {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(prev => prev + 1);
+      return newDate;
+    });
+  }, [activeView]);
+
+  const handleNextMonth = useCallback(() => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (activeView === 'month') {
+        newDate.setMonth(prev.getMonth() + 1);
+      } else if (activeView === 'week') {
+        newDate.setDate(prev.getDate() + 7);
       } else {
-        setCurrentMonth(prev => prev + 1);
+        newDate.setDate(prev.getDate() + 1);
       }
-    }
-  }, [currentMonth]);
-
-  const updateTareas = useCallback((newTareas: TareasPorDia) => {
-    onTareasChange(newTareas);
-  }, [onTareasChange]);
-
-  const updateSugeridas = useCallback((newSugeridas: Categorias) => {
-    onSugeridasChange(newSugeridas);
-  }, [onSugeridasChange]);
-
-  // Función para remover una tarea de un día específico después de moverla
-  const removerTareaDeDia = useCallback((tareaId: string, diaOrigen: number) => {
-    const updated = { ...tareas };
-    
-    if (updated[diaOrigen]) {
-      const tareaIndex = updated[diaOrigen].findIndex(t => t.id === tareaId);
-      if (tareaIndex !== -1) {
-        updated[diaOrigen].splice(tareaIndex, 1);
-        
-        // Si el día origen queda vacío, eliminarlo
-        if (updated[diaOrigen].length === 0) {
-          delete updated[diaOrigen];
-        }
-        
-        updateTareas(updated);
-      }
-    }
-  }, [tareas, updateTareas]);
-
-  const borrarDia = useCallback((day: number) => {
-    const newTareas = { ...tareas };
-    delete newTareas[day];
-    updateTareas(newTareas);
-    toast({
-      title: "Día borrado",
-      description: `Todas las tareas del día ${day} han sido eliminadas`
+      return newDate;
     });
-  }, [tareas, updateTareas, toast]);
+  }, [activeView]);
 
-  const borrarTodo = useCallback(() => {
-    updateTareas({});
+  const handleDayClick = useCallback((date: Date) => {
+    setSelectedDay(date);
+  }, []);
+
+  const handleDrop = useCallback((fecha: string, tareaId: string) => {
+    const updatedTareas = tareas.map(tarea =>
+      tarea.id === tareaId ? { ...tarea, fecha } : tarea
+    );
+    setTareas(updatedTareas);
+
     toast({
-      title: "Todas las tareas borradas",
-      description: `Calendario de ${MESES[currentMonth]} limpio`
+      title: "Tarea movida",
+      description: "La tarea se ha movido correctamente",
     });
-  }, [updateTareas, toast, currentMonth]);
+  }, [tareas, setTareas, toast]);
 
-  // Generar días del calendario
-  const primerDia = getPrimerDiaMes(currentYear, currentMonth);
-  const diasEnMes = getDiasEnMes(currentYear, currentMonth);
-  const dias = Array.from({ length: diasEnMes }, (_, i) => i + 1);
-  const espaciosVacios = Array.from({ length: primerDia }, (_, i) => i);
+  const handleEditTask = useCallback((tarea: Tarea) => {
+    setEditingTask(tarea);
+  }, []);
+
+  const handleUpdateTask = useCallback((updatedTask: Tarea) => {
+    const updatedTareas = tareas.map(tarea =>
+      tarea.id === updatedTask.id ? updatedTask : tarea
+    );
+    setTareas(updatedTareas);
+    setEditingTask(null);
+  }, [tareas, setTareas]);
+
+  const getViewIcon = () => {
+    switch (activeView) {
+      case 'day': return <Calendar className="w-4 h-4" />;
+      case 'week': return <Grid3X3 className="w-4 h-4" />;
+      default: return <Eye className="w-4 h-4" />;
+    }
+  };
+
+  const getViewLabel = () => {
+    switch (activeView) {
+      case 'day': return 'Día';
+      case 'week': return 'Semana';
+      default: return 'Mes';
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Calendario</h1>
-          <p className="text-muted-foreground">{MESES[currentMonth]} {currentYear}</p>
-        </div>
-        
-        {/* Controles de Vista */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant={vista === 'diaria' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setVista('diaria')}
-            className="gap-2"
-          >
-            <Eye className="w-4 h-4" />
-            Día
-          </Button>
-          <Button
-            variant={vista === 'semanal' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setVista('semanal')}
-            className="gap-2"
-          >
-            <Grid3X3 className="w-4 h-4" />
-            Semana
-          </Button>
-          <Button
-            variant={vista === 'mensual' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setVista('mensual')}
-            className="gap-2"
-          >
-            <CalendarIcon className="w-4 h-4" />
-            Mes
-          </Button>
-        </div>
-      </div>
-
-      <Card className="shadow-apple">
-        <CardHeader>
-            
-            {/* Navegación del mes */}
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
+      {/* Panel izquierdo - Calendario */}
+      <div className="flex-1">
+        <Card className="shadow-apple h-full">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigateMonth('prev')}
-                className="gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Anterior
-              </Button>
+              <CardTitle className="text-xl">Calendario Familiar</CardTitle>
               
-              <h2 className="text-xl font-medium">
-                {MESES[currentMonth]} {currentYear}
-              </h2>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigateMonth('next')}
-                className="gap-1"
-              >
-                Siguiente
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Selector de miembro activo */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">Miembro activo:</span>
-              <div className="flex gap-2">
+              {/* View Controls */}
+              <div className="flex items-center gap-2">
                 <Button
+                  variant="outline"
                   size="sm"
-                  className={miembroActivo === 'mama' ? 'btn-mama' : ''}
-                  variant={miembroActivo === 'mama' ? 'default' : 'outline'}
-                  onClick={() => onMiembroChange('mama')}
+                  onClick={() => setActiveView(activeView === 'month' ? 'week' : activeView === 'week' ? 'day' : 'month')}
+                  className="gap-2"
                 >
-                  👩 Mamá
-                </Button>
-                <Button
-                  size="sm"
-                  className={miembroActivo === 'papa' ? 'btn-papa' : ''}
-                  variant={miembroActivo === 'papa' ? 'default' : 'outline'}
-                  onClick={() => onMiembroChange('papa')}
-                >
-                  👨 Papá
-                </Button>
-                <Button
-                  size="sm"
-                  className={miembroActivo === 'ambos' ? 'btn-ambos' : ''}
-                  variant={miembroActivo === 'ambos' ? 'default' : 'outline'}
-                  onClick={() => onMiembroChange('ambos')}
-                >
-                  👨‍👩 Ambos
+                  {getViewIcon()}
+                  {getViewLabel()}
                 </Button>
               </div>
             </div>
-
-            {/* Botones de borrado */}
-            <div className="flex gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                    Borrar todo el mes
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Borrar todas las tareas?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción eliminará todas las tareas de {MESES[currentMonth]} {currentYear}. 
-                      Esta acción no se puede deshacer.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={borrarTodo} className="bg-destructive">
-                      Borrar todo
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
           </CardHeader>
+          <CardContent>
+            <CalendarHeader 
+              currentDate={currentDate}
+              onPreviousMonth={handlePreviousMonth}
+              onNextMonth={handleNextMonth}
+            />
+            
+            <CalendarGrid 
+              currentDate={currentDate}
+              onDayClick={handleDayClick}
+              onTaskDrop={handleDrop}
+            />
+          </CardContent>
         </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Calendario principal */}
-        <div className="lg:col-span-3">
-          <Card className="shadow-apple">
-            <CardContent className="p-6">
-              {vista === 'mensual' && (
-                <>
-                  {/* Cabeceras de días */}
-                  <div className="grid grid-cols-7 gap-1 mb-4">
-                    {DIAS_SEMANA.map((dia) => (
-                      <div 
-                        key={dia} 
-                        className="h-10 flex items-center justify-center font-medium text-muted-foreground"
-                      >
-                        {dia}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Días del calendario */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {/* Espacios vacíos al inicio */}
-                    {espaciosVacios.map((_, index) => (
-                      <div key={`empty-${index}`} className="h-32"></div>
-                    ))}
-                    
-                     {/* Días del mes */}
-                    {dias.map((day) => (
-                      <DayCell
-                        key={day}
-                        day={day}
-                        month={currentMonth}
-                        year={currentYear}
-                        tareas={tareas[day] || []}
-                        miembroActivo={miembroActivo}
-                         onTareasChange={(newTareas) => {
-                           const updated = { ...tareas };
-                           if (newTareas.length === 0) {
-                             delete updated[day];
-                           } else {
-                             updated[day] = newTareas;
-                           }
-                           updateTareas(updated);
-                         }}
-                         onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
-                        onEditTarea={setEditingTask}
-                        onBorrarDia={() => borrarDia(day)}
-                        onDayClick={() => setSelectedDay(day)}
-                        isToday={esHoy(day, currentMonth, currentYear)}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {vista === 'semanal' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Vista Semanal</h3>
-                  <div className="grid grid-cols-7 gap-4">
-                    {DIAS_SEMANA.map((dia, index) => {
-                      const dayOfWeek = new Date().getDay();
-                      const startOfWeek = new Date();
-                      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek + index);
-                      const dayNum = startOfWeek.getDate();
-                      
-                      return (
-                        <div key={dia} className="space-y-2">
-                          <h4 className="font-medium text-center">{dia}</h4>
-                          <div className="min-h-40 p-2 border rounded-lg bg-muted/20">
-                            <div className="text-center font-semibold mb-2">{dayNum}</div>
-                            {(tareas[dayNum] || []).map((tarea) => (
-                              <div key={tarea.id} className="p-1 mb-1 text-xs bg-primary/10 rounded">
-                                {tarea.texto}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {vista === 'diaria' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Vista Diaria - {new Date().getDate()} de {MESES[currentMonth]}</h3>
-                  <div className="space-y-2">
-                    {(tareas[new Date().getDate()] || []).map((tarea) => (
-                      <div key={tarea.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">{tarea.texto}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {tarea.miembro === 'mama' ? '👩 Mamá' : tarea.miembro === 'papa' ? '👨 Papá' : '👨‍👩 Ambos'}
-                          </span>
-                        </div>
-                        {tarea.notas && (
-                          <p className="text-sm text-muted-foreground mt-2">{tarea.notas}</p>
-                        )}
-                      </div>
-                    ))}
-                    {!(tareas[new Date().getDate()] || []).length && (
-                      <p className="text-center text-muted-foreground py-8">
-                        No hay tareas para hoy
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Panel de tareas sugeridas */}
-        <div className="lg:col-span-1">
-          <SuggestedTasksPanel
-            sugeridas={sugeridas}
-            onSugeridasChange={updateSugeridas}
-            miembroActivo={miembroActivo}
-          />
-        </div>
       </div>
 
-      {/* Modal de notas */}
+      {/* Panel derecho - Tareas sugeridas */}
+      <div className="w-full lg:w-80">
+        <SuggestedTasksPanel />
+      </div>
+
+      {/* Modales */}
       {modalTarea && (
         <NotesModal
           tarea={modalTarea}
-          onSave={(updatedTarea) => {
-            const day = Object.keys(tareas).find(key => 
-              tareas[parseInt(key)]?.some(t => t.id === updatedTarea.id)
-            );
-            if (day) {
-              const dayNum = parseInt(day);
-              const updatedTareas = tareas[dayNum].map(t => 
-                t.id === updatedTarea.id ? updatedTarea : t
-              );
-              const newTareas = { ...tareas, [dayNum]: updatedTareas };
-              updateTareas(newTareas);
-            }
-            setModalTarea(null);
-          }}
           onClose={() => setModalTarea(null)}
         />
       )}
 
-      {/* Modal de día completo */}
       {selectedDay && (
         <DayModal
-          day={selectedDay}
-          month={currentMonth}
-          year={currentYear}
-          tareas={tareas[selectedDay] || []}
-          miembroActivo={miembroActivo}
-          isOpen={!!selectedDay}
+          date={selectedDay}
           onClose={() => setSelectedDay(null)}
-          onTareasChange={(newTareas) => {
-            const updated = { ...tareas };
-            if (newTareas.length === 0) {
-              delete updated[selectedDay];
-            } else {
-              updated[selectedDay] = newTareas;
-            }
-            updateTareas(updated);
-          }}
-          onEditTarea={setEditingTask}
-          onBorrarDia={() => borrarDia(selectedDay)}
+          onEditTask={handleEditTask}
         />
       )}
 
-      {/* Modal de edición de tarea */}
       {editingTask && (
         <EditTaskModal
           tarea={editingTask}
-          isOpen={!!editingTask}
           onClose={() => setEditingTask(null)}
-          onSave={(updatedTarea) => {
-            const day = Object.keys(tareas).find(key => 
-              tareas[parseInt(key)]?.some(t => t.id === updatedTarea.id)
-            );
-            if (day) {
-              const dayNum = parseInt(day);
-              const updatedTareas = tareas[dayNum].map(t => 
-                t.id === updatedTarea.id ? updatedTarea : t
-              );
-              const newTareas = { ...tareas, [dayNum]: updatedTareas };
-              updateTareas(newTareas);
-            }
-            setEditingTask(null);
-          }}
+          onSave={handleUpdateTask}
         />
       )}
     </div>
