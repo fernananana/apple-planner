@@ -1,13 +1,29 @@
-import { useEffect } from 'react';
+import { Suspense } from 'react';
 import { useStore } from '@/store/useStore';
 import Login from '@/components/Login';
 import Navigation from '@/components/Navigation';
-import Calendar from '@/components/Calendar';
-import Dashboard from '@/components/Dashboard';
-import TasksSection from '@/components/TasksSection';
-import MembersSection from '@/components/MembersSection';
-import SettingsSection from '@/components/SettingsSection';
 import { useMobile } from '@/hooks/use-mobile';
+import { SEOHead } from '@/components/SEOHead';
+import { 
+  LazyCalendar, 
+  LazyDashboard, 
+  LazyTasksSection, 
+  LazyMembersSection, 
+  LazySettingsSection 
+} from '@/components/LazyComponents';
+
+// Loading component with accessibility
+const LoadingSpinner = () => (
+  <div 
+    className="flex items-center justify-center p-8" 
+    role="status" 
+    aria-live="polite"
+    aria-label="Cargando contenido"
+  >
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <span className="ml-2 text-muted-foreground">Cargando...</span>
+  </div>
+);
 
 const Index = () => {
   const { 
@@ -23,34 +39,44 @@ const Index = () => {
   }
 
   const renderCurrentSection = () => {
-    switch (currentSection) {
-      case 'dashboard':
-        return (
-          <Dashboard
-            tareas={{}} // Will be handled by zustand
-            currentMonth={new Date().getMonth()}
-            currentYear={new Date().getFullYear()}
-            onSectionChange={setCurrentSection}
-          />
-        );
-      case 'calendar':
-        return <Calendar />;
-      case 'tasks':
-        return <TasksSection />;
-      case 'members':
-        return <MembersSection />;
-      case 'settings':
-        return <SettingsSection onLogout={logout} />;
-      default:
-        return null;
-    }
+    const content = (() => {
+      switch (currentSection) {
+        case 'dashboard':
+          return (
+            <LazyDashboard
+              tareas={{}} // Will be handled by zustand
+              currentMonth={new Date().getMonth()}
+              currentYear={new Date().getFullYear()}
+              onSectionChange={setCurrentSection}
+            />
+          );
+        case 'calendar':
+          return <LazyCalendar />;
+        case 'tasks':
+          return <LazyTasksSection />;
+        case 'members':
+          return <LazyMembersSection />;
+        case 'settings':
+          return <LazySettingsSection onLogout={logout} />;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        {content}
+      </Suspense>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead />
+      <div className="min-h-screen bg-background" role="application" aria-label="Calendario Familiar">
       {isMobile ? (
         <div className="flex flex-col h-screen">
-          <main className="flex-1 p-4 pb-20">
+          <main id="main-content" className="flex-1 p-4 pb-20" role="main">
             {renderCurrentSection()}
           </main>
           <Navigation />
@@ -62,12 +88,13 @@ const Index = () => {
               <Navigation />
             </div>
           </div>
-          <main className="flex-1 ml-64 p-6">
+          <main id="main-content" className="flex-1 ml-64 p-6" role="main">
             {renderCurrentSection()}
           </main>
         </div>
       )}
     </div>
+    </>
   );
 };
 

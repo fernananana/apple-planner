@@ -1,14 +1,11 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+Sitemap: /sitemap.xml
+
+# Block access to source maps and config files
+User-agent: *
+Disallow: /*.map$
+Disallow: /vite.config.*
+Disallow: /tsconfig.*
+Disallow: /.env*
