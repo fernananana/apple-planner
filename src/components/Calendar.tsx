@@ -79,7 +79,7 @@ const Calendar = () => {
 
   const getViewIcon = () => {
     switch (activeView) {
-      case 'day': return <Calendar className="w-4 h-4" />;
+      case 'day': return <CalendarIcon className="w-4 h-4" />;
       case 'week': return <Grid3X3 className="w-4 h-4" />;
       default: return <Eye className="w-4 h-4" />;
     }
@@ -141,13 +141,20 @@ const Calendar = () => {
       {modalTarea && (
         <NotesModal
           tarea={modalTarea}
+          onSave={(updatedTarea) => {
+            const updatedTareas = tareas.map(t => t.id === updatedTarea.id ? updatedTarea : t);
+            setTareas(updatedTareas);
+            setModalTarea(null);
+          }}
           onClose={() => setModalTarea(null)}
         />
       )}
 
       {selectedDay && (
         <DayModal
-          date={selectedDay}
+          day={selectedDay.getDate()}
+          month={selectedDay.getMonth()}
+          year={selectedDay.getFullYear()}
           onClose={() => setSelectedDay(null)}
           onEditTask={handleEditTask}
         />
@@ -156,6 +163,7 @@ const Calendar = () => {
       {editingTask && (
         <EditTaskModal
           tarea={editingTask}
+          isOpen={true}
           onClose={() => setEditingTask(null)}
           onSave={handleUpdateTask}
         />

@@ -46,16 +46,18 @@ const DayCell = ({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const addTarea = useCallback(() => {
+    const fechaStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const nuevaTarea: Tarea = {
       id: generarId(),
       texto: `Nueva tarea`,
       miembro: miembroActivo,
       notas: '',
       completada: false,
-      fechaCreacion: new Date().toISOString()
+      fechaCreacion: new Date().toISOString(),
+      fecha: fechaStr
     };
     onTareasChange([...tareas, nuevaTarea]);
-  }, [tareas, miembroActivo, onTareasChange]);
+  }, [tareas, miembroActivo, onTareasChange, year, month, day]);
 
   const updateTarea = useCallback((tareaId: string, updates: Partial<Tarea>) => {
     const updatedTareas = tareas.map(tarea =>
@@ -114,13 +116,15 @@ const DayCell = ({
       
       if (dropData.type === 'suggested') {
         // Crear nueva tarea desde sugerida
+        const fechaStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const nuevaTarea: Tarea = {
           id: generarId(),
           texto: dropData.texto,
           miembro: miembroActivo,
           notas: '',
           completada: false,
-          fechaCreacion: new Date().toISOString()
+          fechaCreacion: new Date().toISOString(),
+          fecha: fechaStr
         };
         console.log('Creating new task from suggested:', nuevaTarea); // Debug log
         onTareasChange([...tareas, nuevaTarea]);

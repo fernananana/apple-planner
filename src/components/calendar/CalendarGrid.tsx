@@ -96,14 +96,19 @@ export const CalendarGrid = ({ currentDate, onDayClick, onTaskDrop }: CalendarGr
           return (
             <DayCell
               key={index}
-              date={day}
-              tasks={tareasDelDia}
-              isCurrentMonth={
-                activeView === 'day' || activeView === 'week' || 
-                day.getMonth() === currentDate.getMonth()
-              }
-              onClick={() => onDayClick(day)}
-              onTaskDrop={(tareaId) => onTaskDrop(fechaStr, tareaId)}
+              day={day.getDate()}
+              month={day.getMonth()}
+              year={day.getFullYear()}
+              tareas={tareasDelDia}
+              miembroActivo={tareas.find(t => t.fecha === fechaStr)?.miembro || 'mama'}
+              onTareasChange={(updatedTareas) => {
+                const allTareas = tareas.filter(t => t.fecha !== fechaStr).concat(updatedTareas);
+                // This will be handled by the parent component
+              }}
+              onEditTarea={() => {}}
+              onBorrarDia={() => {}}
+              onDayClick={() => onDayClick(day)}
+              isToday={day.toDateString() === new Date().toDateString()}
             />
           );
         })}

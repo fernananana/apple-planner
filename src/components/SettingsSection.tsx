@@ -16,25 +16,21 @@ import {
   Palette,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { TareasPorDia, Categorias } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { useStore } from '@/store/useStore';
 
 interface SettingsSectionProps {
-  tareas: TareasPorDia;
-  sugeridas: Categorias;
-  onTareasChange: (tareas: TareasPorDia) => void;
-  onSugeridasChange: (sugeridas: Categorias) => void;
   onLogout: () => void;
 }
 
-const SettingsSection = ({ 
-  tareas, 
-  sugeridas, 
-  onTareasChange, 
-  onSugeridasChange, 
-  onLogout 
-}: SettingsSectionProps) => {
+const SettingsSection = ({ onLogout }: SettingsSectionProps) => {
+  const { tareas, sugeridas, setTareas, setSugeridas } = useStore((state) => ({
+    tareas: state.tareas,
+    sugeridas: state.sugeridas,
+    setTareas: state.setTareas,
+    setSugeridas: state.setSugeridas,
+  }));
   const { toast } = useToast();
   const [emails, setEmails] = useState<string[]>(['']);
   const [tema, setTema] = useState('system');
@@ -78,10 +74,10 @@ const SettingsSection = ({
         const datos = JSON.parse(e.target?.result as string);
         
         if (datos.tareas) {
-          onTareasChange(datos.tareas);
+          setTareas(datos.tareas);
         }
         if (datos.sugeridas) {
-          onSugeridasChange(datos.sugeridas);
+          setSugeridas(datos.sugeridas);
         }
         
         toast({
@@ -103,8 +99,8 @@ const SettingsSection = ({
   };
 
   const borrarTodosDatos = () => {
-    onTareasChange({});
-    onSugeridasChange({});
+    setTareas([]);
+    setSugeridas([]);
     
     toast({
       title: "Datos borrados",
@@ -343,8 +339,8 @@ const SettingsSection = ({
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p><strong>Versión:</strong> 1.0.0</p>
-          <p><strong>Tareas totales:</strong> {Object.values(tareas).flat().length}</p>
-          <p><strong>Categorías:</strong> {Object.keys(sugeridas).length}</p>
+          <p><strong>Tareas totales:</strong> {tareas.length}</p>
+          <p><strong>Sugeridas:</strong> {sugeridas.length}</p>
           <p><strong>Última actualización:</strong> {new Date().toLocaleDateString()}</p>
         </CardContent>
       </Card>

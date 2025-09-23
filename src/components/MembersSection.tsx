@@ -9,38 +9,42 @@ import {
   TrendingUp,
   Star
 } from 'lucide-react';
-import { TareasPorDia, Miembro } from '@/types';
+import { Miembro } from '@/types';
+import { useStore } from '@/store/useStore';
 
-interface MembersSectionProps {
-  tareas: TareasPorDia;
-  miembroActivo: Miembro;
-  onMiembroChange: (miembro: Miembro) => void;
-}
-
-const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSectionProps) => {
-  const todasLasTareas = Object.values(tareas).flat();
+const MembersSection = () => {
+  const { tareas, miembroActivo, setMiembroActivo } = useStore((state) => ({
+    tareas: state.tareas,
+    miembroActivo: state.miembroActivo,
+    setMiembroActivo: state.setMiembroActivo,
+  }));
   
   const estadisticasPorMiembro = {
     mama: {
-      total: todasLasTareas.filter(t => t.miembro === 'mama').length,
-      completadas: todasLasTareas.filter(t => t.miembro === 'mama' && t.completada).length,
+      total: tareas.filter(t => t.miembro === 'mama').length,
+      completadas: tareas.filter(t => t.miembro === 'mama' && t.completada).length,
       valoracionPromedio: 0
     },
     papa: {
-      total: todasLasTareas.filter(t => t.miembro === 'papa').length,
-      completadas: todasLasTareas.filter(t => t.miembro === 'papa' && t.completada).length,
+      total: tareas.filter(t => t.miembro === 'papa').length,
+      completadas: tareas.filter(t => t.miembro === 'papa' && t.completada).length,
+      valoracionPromedio: 0
+    },
+    viggo: {
+      total: tareas.filter(t => t.miembro === 'viggo').length,
+      completadas: tareas.filter(t => t.miembro === 'viggo' && t.completada).length,
       valoracionPromedio: 0
     },
     ambos: {
-      total: todasLasTareas.filter(t => t.miembro === 'ambos').length,
-      completadas: todasLasTareas.filter(t => t.miembro === 'ambos' && t.completada).length,
+      total: tareas.filter(t => t.miembro === 'ambos').length,
+      completadas: tareas.filter(t => t.miembro === 'ambos' && t.completada).length,
       valoracionPromedio: 0
     }
   };
 
   // Calcular valoraciones promedio
   Object.keys(estadisticasPorMiembro).forEach(miembro => {
-    const tareasConValoracion = todasLasTareas.filter(t => 
+    const tareasConValoracion = tareas.filter(t => 
       t.miembro === miembro && t.valoracion
     );
     if (tareasConValoracion.length > 0) {
@@ -65,6 +69,13 @@ const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSecti
           icon: '👨',
           color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
           gradiente: 'from-blue-500 to-cyan-500'
+        };
+      case 'viggo':
+        return {
+          nombre: 'Viggo',
+          icon: '👶',
+          color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+          gradiente: 'from-green-500 to-emerald-500'
         };
       case 'ambos':
         return {
@@ -111,8 +122,8 @@ const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSecti
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(['mama', 'papa', 'ambos'] as Miembro[]).map((miembro) => {
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {(['mama', 'papa', 'viggo', 'ambos'] as Miembro[]).map((miembro) => {
               const info = getMiembroInfo(miembro);
               const isActivo = miembroActivo === miembro;
               
@@ -121,7 +132,7 @@ const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSecti
                   key={miembro}
                   variant={isActivo ? 'default' : 'outline'}
                   size="lg"
-                  onClick={() => onMiembroChange(miembro)}
+                  onClick={() => setMiembroActivo(miembro)}
                   className={`h-16 justify-start gap-3 ${
                     isActivo ? `bg-gradient-to-r ${info.gradiente} text-white` : ''
                   }`}
@@ -141,8 +152,8 @@ const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSecti
       </Card>
 
       {/* Estadísticas Detalladas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {(['mama', 'papa', 'ambos'] as Miembro[]).map((miembro) => {
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {(['mama', 'papa', 'viggo', 'ambos'] as Miembro[]).map((miembro) => {
           const info = getMiembroInfo(miembro);
           const stats = estadisticasPorMiembro[miembro];
           const porcentaje = stats.total > 0 ? Math.round((stats.completadas / stats.total) * 100) : 0;
@@ -206,7 +217,7 @@ const MembersSection = ({ tareas, miembroActivo, onMiembroChange }: MembersSecti
                 <div>
                   <h4 className="text-sm font-medium mb-2">Últimas tareas</h4>
                   <div className="space-y-1">
-                    {todasLasTareas
+                    {tareas
                       .filter(t => t.miembro === miembro)
                       .slice(-3)
                       .map((tarea) => (

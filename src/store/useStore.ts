@@ -63,17 +63,28 @@ export const useStore = create<AppState>((set, get) => ({
   setMiembroActivo: (miembro: Miembro) => set({ miembroActivo: miembro }),
 
   // Tasks
-  tareas: [],
+  tareas: Object.values(loadTareas()).flat(),
   setTareas: (tareas: Tarea[]) => {
     set({ tareas });
-    debouncedSaveTareas(tareas);
+    // Convert to TareasPorDia format for storage
+    const tareasPorDia: Record<string, Tarea[]> = {};
+    tareas.forEach(tarea => {
+      if (tarea.fecha) {
+        const day = new Date(tarea.fecha).getDate();
+        if (!tareasPorDia[day]) tareasPorDia[day] = [];
+        tareasPorDia[day].push(tarea);
+      }
+    });
+    debouncedSaveTareas(tareasPorDia);
   },
 
   // Suggested tasks
-  sugeridas: [],
+  sugeridas: Object.values(loadSugeridas()).flat(),
   setSugeridas: (sugeridas: TareaSugerida[]) => {
     set({ sugeridas });
-    debouncedSaveSugeridas(sugeridas);
+    // Convert to Categorias format for storage
+    const categorias = { 'General': sugeridas };
+    debouncedSaveSugeridas(categorias);
   },
 
   // Current view
