@@ -45,7 +45,8 @@ const DayCell = ({
 }: DayCellProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const addTarea = useCallback(() => {
+  const addTarea = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se dispare onDayClick
     const fechaStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const nuevaTarea: Tarea = {
       id: generarId(),
@@ -141,8 +142,12 @@ const DayCell = ({
         }); // Debug log
         
         if (!tareaYaExiste && dropData.sourceDay !== day) {
-          // Añadir la tarea a este día
-          onTareasChange([...tareas, tareaExistente]);
+          // Actualizar la fecha de la tarea
+          const fechaStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const tareaActualizada = { ...tareaExistente, fecha: fechaStr };
+          
+          // Añadir la tarea a este día con la nueva fecha
+          onTareasChange([...tareas, tareaActualizada]);
           // Llamar la función para remover del día origen
           if (onMoverTarea && dropData.sourceDay !== undefined) {
             onMoverTarea(tareaExistente.id, dropData.sourceDay);
@@ -157,10 +162,10 @@ const DayCell = ({
   return (
     <div 
       className={`
-        relative h-32 border rounded-lg p-2 bg-card transition-all duration-200
+        relative min-h-[100px] sm:h-32 border rounded-lg p-2 bg-card transition-all duration-200
         ${isToday ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
         ${isDragOver ? 'ring-2 ring-primary border-primary bg-primary/20' : ''}
-        ${tareas.length === 0 ? 'min-h-[128px]' : ''}
+        flex flex-col
       `}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
@@ -168,22 +173,23 @@ const DayCell = ({
       onDrop={handleDrop}
     >
       {/* Número del día y controles */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <button 
-          className={`text-sm font-medium hover:underline cursor-pointer ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}
+          className={`text-sm sm:text-base font-medium hover:underline cursor-pointer ${isToday ? 'text-primary font-bold' : 'text-foreground'}`}
           onClick={onDayClick}
         >
           {day}
         </button>
         
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 hover:bg-primary/10"
+            className="h-7 w-7 sm:h-6 sm:w-6 p-0 hover:bg-primary/10 flex-shrink-0"
             onClick={addTarea}
+            aria-label="Añadir tarea"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-4 h-4 sm:w-3 sm:h-3" />
           </Button>
           
           {tareas.length > 0 && (
@@ -192,9 +198,10 @@ const DayCell = ({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 w-6 p-0 hover:bg-destructive/10 text-destructive"
+                  className="h-7 w-7 sm:h-6 sm:w-6 p-0 hover:bg-destructive/10 text-destructive flex-shrink-0"
+                  aria-label="Borrar todas las tareas"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -217,7 +224,7 @@ const DayCell = ({
       </div>
 
       {/* Lista de tareas */}
-      <div className="space-y-1 overflow-y-auto max-h-20">
+      <div className="space-y-1 overflow-y-auto flex-1">
         {tareas.map((tarea) => (
           <TaskCard
             key={tarea.id}
@@ -232,8 +239,8 @@ const DayCell = ({
 
       {/* Indicador de zona de drop */}
       {isDragOver && (
-        <div className="absolute inset-0 border-2 border-dashed border-primary bg-primary/10 rounded-lg flex items-center justify-center">
-          <span className="text-primary font-medium">Soltar aquí</span>
+        <div className="absolute inset-0 border-2 border-dashed border-primary bg-primary/10 rounded-lg flex items-center justify-center pointer-events-none">
+          <span className="text-primary font-medium text-sm sm:text-base">Soltar aquí</span>
         </div>
       )}
     </div>

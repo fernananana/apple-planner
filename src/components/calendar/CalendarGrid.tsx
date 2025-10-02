@@ -66,11 +66,11 @@ export const CalendarGrid = ({ currentDate, onDayClick, onTaskDrop }: CalendarGr
   const getGridClass = () => {
     switch (activeView) {
       case 'week':
-        return 'grid grid-cols-7 gap-2';
+        return 'grid grid-cols-1 sm:grid-cols-7 gap-2';
       case 'day':
         return 'grid grid-cols-1 gap-4';
       default:
-        return 'grid grid-cols-7 gap-2';
+        return 'grid grid-cols-7 gap-1 sm:gap-2';
     }
   };
 
@@ -78,9 +78,9 @@ export const CalendarGrid = ({ currentDate, onDayClick, onTaskDrop }: CalendarGr
     <div className="space-y-4">
       {/* Header with day names */}
       {activeView !== 'day' && (
-        <div className="grid grid-cols-7 gap-2">
+        <div className="hidden sm:grid grid-cols-7 gap-1 sm:gap-2">
           {diasSemana.map((dia) => (
-            <div key={dia} className="p-2 text-center font-medium text-muted-foreground">
+            <div key={dia} className="p-2 text-center text-xs sm:text-sm font-medium text-muted-foreground">
               {dia}
             </div>
           ))}
