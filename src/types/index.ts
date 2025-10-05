@@ -15,6 +15,7 @@ export interface Tarea {
   valoracion?: number; // 1-5
   confirmada?: boolean;
   fecha?: string; // formato YYYY-MM-DD
+  archivada?: boolean; // Para eliminación suave - no se muestra pero sigue en estadísticas
 }
 
 export type TareasPorDia = Record<number, Tarea[]>;

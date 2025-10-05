@@ -69,6 +69,13 @@ const DayCell = ({
     onTareasChange(updatedTareas);
   }, [tareas, onTareasChange]);
 
+  const archiveTarea = useCallback((tareaId: string) => {
+    const updatedTareas = tareas.map(tarea =>
+      tarea.id === tareaId ? { ...tarea, archivada: true } : tarea
+    );
+    onTareasChange(updatedTareas);
+  }, [tareas, onTareasChange]);
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -220,6 +227,7 @@ const DayCell = ({
             tarea={tarea}
             onUpdate={(updates) => updateTarea(tarea.id, updates)}
             onDelete={() => deleteTarea(tarea.id)}
+            onArchive={() => archiveTarea(tarea.id)}
             onEdit={() => onEditTarea(tarea)}
             sourceDay={day}
           />

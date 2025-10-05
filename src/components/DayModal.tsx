@@ -66,6 +66,13 @@ const DayModal = ({
     onTareasChange(updatedTareas);
   }, [tareas, onTareasChange]);
 
+  const archiveTarea = useCallback((tareaId: string) => {
+    const updatedTareas = tareas.map(tarea =>
+      tarea.id === tareaId ? { ...tarea, archivada: true } : tarea
+    );
+    onTareasChange(updatedTareas);
+  }, [tareas, onTareasChange]);
+
   const handleBorrarDia = () => {
     onBorrarDia();
     onClose();
@@ -140,6 +147,7 @@ const DayModal = ({
                   tarea={tarea}
                   onUpdate={(updates) => updateTarea(tarea.id, updates)}
                   onDelete={() => deleteTarea(tarea.id)}
+                  onArchive={() => archiveTarea(tarea.id)}
                   onEdit={() => onEditTarea(tarea)}
                   sourceDay={day}
                   isDraggable={false}

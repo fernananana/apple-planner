@@ -99,18 +99,39 @@ const Calendar = ({
     delete newTareas[day];
     updateTareas(newTareas);
     toast({
-      title: "Día borrado",
-      description: `Todas las tareas del día ${day} han sido eliminadas`
+      title: "Día archivado",
+      description: `Todas las tareas del día ${day} han sido archivadas`
     });
   }, [tareas, updateTareas, toast]);
 
-  const borrarTodo = useCallback(() => {
-    updateTareas({});
-    toast({
-      title: "Todas las tareas borradas",
-      description: `Calendario de ${MESES[currentMonth]} limpio`
+  const borrarMes = useCallback(() => {
+    const newTareas = { ...tareas };
+    // Archivar todas las tareas del mes actual
+    Object.keys(newTareas).forEach(day => {
+      const dayNum = parseInt(day);
+      if (newTareas[dayNum]) {
+        newTareas[dayNum] = newTareas[dayNum].map(tarea => ({
+          ...tarea,
+          archivada: true
+        }));
+      }
     });
-  }, [updateTareas, toast, currentMonth]);
+    updateTareas(newTareas);
+    toast({
+      title: "Mes archivado",
+      description: `Todas las tareas de ${MESES[currentMonth]} han sido archivadas. Las estadísticas se mantienen.`
+    });
+  }, [tareas, updateTareas, toast, currentMonth]);
+
+  // Filtrar tareas archivadas para la vista
+  const tareasVisibles = Object.keys(tareas).reduce((acc, day) => {
+    const dayNum = parseInt(day);
+    const tareasDia = tareas[dayNum].filter(t => !t.archivada);
+    if (tareasDia.length > 0) {
+      acc[dayNum] = tareasDia;
+    }
+    return acc;
+  }, {} as TareasPorDia);
 
   // Generar días del calendario
   const primerDia = getPrimerDiaMes(currentYear, currentMonth);
@@ -226,21 +247,21 @@ const Calendar = ({
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 text-destructive">
                     <Trash2 className="w-4 h-4" />
-                    Borrar todo el mes
+                    Archivar todo el mes
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>¿Borrar todas las tareas?</AlertDialogTitle>
+                    <AlertDialogTitle>¿Archivar todas las tareas del mes?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta acción eliminará todas las tareas de {MESES[currentMonth]} {currentYear}. 
-                      Esta acción no se puede deshacer.
+                      Esta acción ocultará todas las tareas de {MESES[currentMonth]} {currentYear} de la vista, 
+                      pero se mantendrán en las estadísticas para análisis histórico.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={borrarTodo} className="bg-destructive">
-                      Borrar todo
+                    <AlertDialogAction onClick={borrarMes} className="bg-destructive">
+                      Archivar mes
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -276,23 +297,23 @@ const Calendar = ({
                     ))}
                     
                      {/* Días del mes */}
-                    {dias.map((day) => (
-                      <DayCell
-                        key={day}
-                        day={day}
-                        month={currentMonth}
-                        year={currentYear}
-                        tareas={tareas[day] || []}
-                        miembroActivo={miembroActivo}
-                         onTareasChange={(newTareas) => {
-                           const updated = { ...tareas };
-                           if (newTareas.length === 0) {
-                             delete updated[day];
-                           } else {
-                             updated[day] = newTareas;
-                           }
-                           updateTareas(updated);
-                         }}
+                     {dias.map((day) => (
+                       <DayCell
+                         key={day}
+                         day={day}
+                         month={currentMonth}
+                         year={currentYear}
+                         tareas={tareasVisibles[day] || []}
+                         miembroActivo={miembroActivo}
+                          onTareasChange={(newTareas) => {
+                            const updated = { ...tareas };
+                            if (newTareas.length === 0) {
+                              delete updated[day];
+                            } else {
+                              updated[day] = newTareas;
+                            }
+                            updateTareas(updated);
+                          }}
                          onMoverTarea={(tareaId, diaOrigen) => removerTareaDeDia(tareaId, diaOrigen)}
                         onEditTarea={setEditingTask}
                         onBorrarDia={() => borrarDia(day)}
@@ -315,17 +336,17 @@ const Calendar = ({
                       const dayNum = startOfWeek.getDate();
                       
                       return (
-                        <div key={dia} className="space-y-2">
-                          <h4 className="font-medium text-center">{dia}</h4>
-                          <div className="min-h-40 p-2 border rounded-lg bg-muted/20">
-                            <div className="text-center font-semibold mb-2">{dayNum}</div>
-                            {(tareas[dayNum] || []).map((tarea) => (
-                              <div key={tarea.id} className="p-1 mb-1 text-xs bg-primary/10 rounded">
-                                {tarea.texto}
-                              </div>
-                            ))}
+                          <div key={dia} className="space-y-2">
+                            <h4 className="font-medium text-center">{dia}</h4>
+                            <div className="min-h-40 p-2 border rounded-lg bg-muted/20">
+                              <div className="text-center font-semibold mb-2">{dayNum}</div>
+                              {(tareasVisibles[dayNum] || []).map((tarea) => (
+                                <div key={tarea.id} className="p-1 mb-1 text-xs bg-primary/10 rounded">
+                                  {tarea.texto}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
                       );
                     })}
                   </div>
@@ -336,7 +357,7 @@ const Calendar = ({
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Vista Diaria - {new Date().getDate()} de {MESES[currentMonth]}</h3>
                   <div className="space-y-2">
-                    {(tareas[new Date().getDate()] || []).map((tarea) => (
+                    {(tareasVisibles[new Date().getDate()] || []).map((tarea) => (
                       <div key={tarea.id} className="p-4 border rounded-lg bg-card">
                         <div className="flex justify-between items-center">
                           <span className="font-medium">{tarea.texto}</span>
@@ -349,7 +370,7 @@ const Calendar = ({
                         )}
                       </div>
                     ))}
-                    {!(tareas[new Date().getDate()] || []).length && (
+                    {!(tareasVisibles[new Date().getDate()] || []).length && (
                       <p className="text-center text-muted-foreground py-8">
                         No hay tareas para hoy
                       </p>
@@ -399,7 +420,7 @@ const Calendar = ({
           day={selectedDay}
           month={currentMonth}
           year={currentYear}
-          tareas={tareas[selectedDay] || []}
+          tareas={tareasVisibles[selectedDay] || []}
           miembroActivo={miembroActivo}
           isOpen={!!selectedDay}
           onClose={() => setSelectedDay(null)}

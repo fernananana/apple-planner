@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { X, FileText, Edit2, Check } from 'lucide-react';
+import { X, FileText, Edit2, Check, Archive } from 'lucide-react';
 import { Tarea } from '@/types';
 import { z } from 'zod';
 
@@ -15,6 +15,7 @@ interface TaskCardProps {
   tarea: Tarea;
   onUpdate: (updates: Partial<Tarea>) => void;
   onDelete: () => void;
+  onArchive?: () => void;
   onEdit: () => void;
   isDraggable?: boolean;
   sourceDay?: number;
@@ -23,7 +24,8 @@ interface TaskCardProps {
 const TaskCard = ({ 
   tarea, 
   onUpdate, 
-  onDelete, 
+  onDelete,
+  onArchive,
   onEdit,
   isDraggable = true,
   sourceDay
@@ -204,18 +206,34 @@ const TaskCard = ({
               <Check className="w-3 h-3 text-green-600" />
             </Button>
           ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              title="Eliminar"
-            >
-              <X className="w-3 h-3" />
-            </Button>
+            <>
+              {onArchive && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:bg-orange-500 hover:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onArchive();
+                  }}
+                  title="Archivar (mantiene estadísticas)"
+                >
+                  <Archive className="w-3 h-3" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                title="Eliminar permanentemente"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </>
           )}
         </div>
       </div>
