@@ -55,7 +55,6 @@ const Index = () => {
       case 'dashboard':
         return (
           <Dashboard
-            tareas={tareas}
             currentMonth={new Date().getMonth()}
             currentYear={new Date().getFullYear()}
             onSectionChange={setCurrentSection}

@@ -1,4 +1,4 @@
-export type Miembro = 'mama' | 'papa' | 'ambos';
+export type Miembro = 'mama' | 'papa' | 'ambos' | 'viggo';
 
 export type TipoRecurrencia = 'puntual' | 'diaria' | 'semanal' | 'mensual';
 
@@ -14,6 +14,7 @@ export interface Tarea {
   categoria?: string;
   valoracion?: number; // 1-5
   confirmada?: boolean;
+  fecha?: string; // formato YYYY-MM-DD
 }
 
 export type TareasPorDia = Record<number, Tarea[]>;
