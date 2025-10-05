@@ -62,7 +62,6 @@ const EditTaskModal = ({ tarea, isOpen, onClose, onSave }: EditTaskModalProps) =
                 <SelectItem value="mama">👩 Mamá</SelectItem>
                 <SelectItem value="papa">👨 Papá</SelectItem>
                 <SelectItem value="ambos">👨‍👩 Ambos</SelectItem>
-                <SelectItem value="viggo">👶 Viggo</SelectItem>
               </SelectContent>
             </Select>
           </div>

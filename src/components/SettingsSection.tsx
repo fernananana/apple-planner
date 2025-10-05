@@ -16,21 +16,25 @@ import {
   Palette,
   Calendar as CalendarIcon
 } from 'lucide-react';
+import { TareasPorDia, Categorias } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
-import { useStore } from '@/store/useStore';
 
 interface SettingsSectionProps {
+  tareas: TareasPorDia;
+  sugeridas: Categorias;
+  onTareasChange: (tareas: TareasPorDia) => void;
+  onSugeridasChange: (sugeridas: Categorias) => void;
   onLogout: () => void;
 }
 
-const SettingsSection = ({ onLogout }: SettingsSectionProps) => {
-  const { tareas, sugeridas, setTareas, setSugeridas } = useStore((state) => ({
-    tareas: state.tareas,
-    sugeridas: state.sugeridas,
-    setTareas: state.setTareas,
-    setSugeridas: state.setSugeridas,
-  }));
+const SettingsSection = ({ 
+  tareas, 
+  sugeridas, 
+  onTareasChange, 
+  onSugeridasChange, 
+  onLogout 
+}: SettingsSectionProps) => {
   const { toast } = useToast();
   const [emails, setEmails] = useState<string[]>(['']);
   const [tema, setTema] = useState('system');
@@ -74,10 +78,10 @@ const SettingsSection = ({ onLogout }: SettingsSectionProps) => {
         const datos = JSON.parse(e.target?.result as string);
         
         if (datos.tareas) {
-          setTareas(datos.tareas);
+          onTareasChange(datos.tareas);
         }
         if (datos.sugeridas) {
-          setSugeridas(datos.sugeridas);
+          onSugeridasChange(datos.sugeridas);
         }
         
         toast({
@@ -99,8 +103,8 @@ const SettingsSection = ({ onLogout }: SettingsSectionProps) => {
   };
 
   const borrarTodosDatos = () => {
-    setTareas([]);
-    setSugeridas([]);
+    onTareasChange({});
+    onSugeridasChange({});
     
     toast({
       title: "Datos borrados",
@@ -339,8 +343,8 @@ const SettingsSection = ({ onLogout }: SettingsSectionProps) => {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p><strong>Versión:</strong> 1.0.0</p>
-          <p><strong>Tareas totales:</strong> {tareas.length}</p>
-          <p><strong>Sugeridas:</strong> {sugeridas.length}</p>
+          <p><strong>Tareas totales:</strong> {Object.values(tareas).flat().length}</p>
+          <p><strong>Categorías:</strong> {Object.keys(sugeridas).length}</p>
           <p><strong>Última actualización:</strong> {new Date().toLocaleDateString()}</p>
         </CardContent>
       </Card>

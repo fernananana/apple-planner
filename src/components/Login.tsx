@@ -4,14 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useStore } from '@/store/useStore';
 
-const Login = () => {
+interface LoginProps {
+  onSuccess: () => void;
+}
+
+const Login = ({ onSuccess }: LoginProps) => {
   const [usuario, setUsuario] = useState('');
   const [contraseña, setContraseña] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ const Login = () => {
         title: "¡Bienvenida familia! 👨‍👩‍👧‍👦",
         description: "Acceso autorizado al calendario familiar"
       });
-      login();
+      onSuccess();
     } else {
       toast({
         title: "Credenciales incorrectas",

@@ -10,13 +10,14 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { useStore } from '@/store/useStore';
-import { useMobile } from '@/hooks/use-mobile';
 
-const Navigation = () => {
+interface NavigationProps {
+  currentSection: string;
+  onSectionChange: (section: string) => void;
+}
+
+const Navigation = ({ currentSection, onSectionChange }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { currentSection, setCurrentSection } = useStore();
-  const isMobile = useMobile();
 
   const sections = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -31,7 +32,7 @@ const Navigation = () => {
       variant={currentSection === section.id ? 'default' : 'ghost'}
       size="lg"
       onClick={() => {
-        setCurrentSection(section.id);
+        onSectionChange(section.id);
         setIsMobileMenuOpen(false);
       }}
       className="w-full justify-start gap-3 h-12 text-base"
@@ -41,31 +42,22 @@ const Navigation = () => {
     </Button>
   );
 
-  if (isMobile) {
-    return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-        <div className="flex justify-around py-2">
-          {sections.map((section) => (
-            <Button
-              key={section.id}
-              variant={currentSection === section.id ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setCurrentSection(section.id)}
-              className="flex flex-col items-center gap-1 h-auto py-2 px-3"
-            >
-              <section.icon className="w-4 h-4" />
-              <span className="text-xs">{section.label}</span>
-            </Button>
-          ))}
-        </div>
-      </nav>
-    );
-  }
-
   return (
     <>
+      {/* Mobile Menu Toggle */}
+      <div className="md:hidden fixed top-4 right-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="bg-background/80 backdrop-blur-sm"
+        >
+          {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        </Button>
+      </div>
+
       {/* Desktop Navigation */}
-      <Card className="shadow-apple">
+      <Card className="hidden md:block shadow-apple">
         <CardContent className="p-4">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold mb-4">Calendario Familiar 👨‍👩‍👧‍👦</h2>
@@ -75,6 +67,22 @@ const Navigation = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile Navigation Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm">
+          <Card className="absolute top-16 left-4 right-4 shadow-apple">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold mb-4">Calendario Familiar 👨‍👩‍👧‍👦</h2>
+                {sections.map((section) => (
+                  <NavButton key={section.id} section={section} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </>
   );
 };

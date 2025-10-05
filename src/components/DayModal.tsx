@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Trash2 } from 'lucide-react';
-import { Tarea } from '@/types';
+import { Miembro, Tarea } from '@/types';
 import { generarId } from '@/lib/calendar-utils';
 import TaskCard from './TaskCard';
 import {
@@ -16,32 +16,32 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useStore } from '@/store/useStore';
 
 interface DayModalProps {
   day: number;
   month: number;
   year: number;
+  tareas: Tarea[];
+  miembroActivo: Miembro;
+  isOpen: boolean;
   onClose: () => void;
-  onEditTask: (tarea: Tarea) => void;
+  onTareasChange: (tareas: Tarea[]) => void;
+  onEditTarea: (tarea: Tarea) => void;
+  onBorrarDia: () => void;
 }
 
 const DayModal = ({
   day,
   month,
   year,
+  tareas,
+  miembroActivo,
+  isOpen,
   onClose,
-  onEditTask
+  onTareasChange,
+  onEditTarea,
+  onBorrarDia
 }: DayModalProps) => {
-  const { tareas, setTareas, miembroActivo } = useStore((state) => ({
-    tareas: state.tareas,
-    setTareas: state.setTareas,
-    miembroActivo: state.miembroActivo,
-  }));
-
-  const fechaStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  const tareasDelDia = tareas.filter(tarea => tarea.fecha === fechaStr);
-
   const addTarea = useCallback(() => {
     const nuevaTarea: Tarea = {
       id: generarId(),
@@ -49,27 +49,25 @@ const DayModal = ({
       miembro: miembroActivo,
       notas: '',
       completada: false,
-      fechaCreacion: new Date().toISOString(),
-      fecha: fechaStr
+      fechaCreacion: new Date().toISOString()
     };
-    setTareas([...tareas, nuevaTarea]);
-  }, [tareas, miembroActivo, setTareas, fechaStr]);
+    onTareasChange([...tareas, nuevaTarea]);
+  }, [tareas, miembroActivo, onTareasChange]);
 
   const updateTarea = useCallback((tareaId: string, updates: Partial<Tarea>) => {
     const updatedTareas = tareas.map(tarea =>
       tarea.id === tareaId ? { ...tarea, ...updates } : tarea
     );
-    setTareas(updatedTareas);
-  }, [tareas, setTareas]);
+    onTareasChange(updatedTareas);
+  }, [tareas, onTareasChange]);
 
   const deleteTarea = useCallback((tareaId: string) => {
     const updatedTareas = tareas.filter(tarea => tarea.id !== tareaId);
-    setTareas(updatedTareas);
-  }, [tareas, setTareas]);
+    onTareasChange(updatedTareas);
+  }, [tareas, onTareasChange]);
 
   const handleBorrarDia = () => {
-    const updatedTareas = tareas.filter(tarea => tarea.fecha !== fechaStr);
-    setTareas(updatedTareas);
+    onBorrarDia();
     onClose();
   };
 
@@ -79,7 +77,7 @@ const DayModal = ({
   ];
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -97,7 +95,7 @@ const DayModal = ({
                 Agregar tarea
               </Button>
               
-              {tareasDelDia.length > 0 && (
+              {tareas.length > 0 && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -130,19 +128,19 @@ const DayModal = ({
         </DialogHeader>
 
         <div className="mt-6 overflow-y-auto max-h-[60vh] space-y-3">
-          {tareasDelDia.length === 0 ? (
+          {tareas.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p>No hay tareas para este día</p>
               <p className="text-sm mt-2">Haz clic en "Agregar tarea" para empezar</p>
             </div>
           ) : (
-            tareasDelDia.map((tarea) => (
+            tareas.map((tarea) => (
               <div key={tarea.id} className="p-3 border rounded-lg bg-card">
                 <TaskCard
                   tarea={tarea}
                   onUpdate={(updates) => updateTarea(tarea.id, updates)}
                   onDelete={() => deleteTarea(tarea.id)}
-                  onEdit={() => onEditTask(tarea)}
+                  onEdit={() => onEditTarea(tarea)}
                   sourceDay={day}
                   isDraggable={false}
                 />
