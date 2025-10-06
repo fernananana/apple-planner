@@ -46,6 +46,7 @@ const Calendar = ({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [vista, setVista] = useState<'diaria' | 'semanal' | 'mensual'>('mensual');
   const [editingTask, setEditingTask] = useState<Tarea | null>(null);
+  const [filtroMiembro, setFiltroMiembro] = useState<Miembro | 'todos'>('todos');
   const { toast } = useToast();
 
 
@@ -123,10 +124,18 @@ const Calendar = ({
     });
   }, [tareas, updateTareas, toast, currentMonth]);
 
-  // Filtrar tareas archivadas para la vista
+  // Filtrar tareas archivadas y por miembro para la vista
   const tareasVisibles = Object.keys(tareas).reduce((acc, day) => {
     const dayNum = parseInt(day);
-    const tareasDia = tareas[dayNum].filter(t => !t.archivada);
+    let tareasDia = tareas[dayNum].filter(t => !t.archivada);
+    
+    // Aplicar filtro de miembro
+    if (filtroMiembro !== 'todos') {
+      tareasDia = tareasDia.filter(t => 
+        t.miembro === filtroMiembro || t.miembro === 'ambos'
+      );
+    }
+    
     if (tareasDia.length > 0) {
       acc[dayNum] = tareasDia;
     }
@@ -237,6 +246,41 @@ const Calendar = ({
                   onClick={() => onMiembroChange('ambos')}
                 >
                   👨‍👩 Ambos
+                </Button>
+              </div>
+            </div>
+
+            {/* Filtros visuales */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Filtrar vista:</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={filtroMiembro === 'todos' ? 'default' : 'outline'}
+                  onClick={() => setFiltroMiembro('todos')}
+                >
+                  Todos
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filtroMiembro === 'mama' ? 'default' : 'outline'}
+                  onClick={() => setFiltroMiembro('mama')}
+                >
+                  👩
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filtroMiembro === 'papa' ? 'default' : 'outline'}
+                  onClick={() => setFiltroMiembro('papa')}
+                >
+                  👨
+                </Button>
+                <Button
+                  size="sm"
+                  variant={filtroMiembro === 'viggo' ? 'default' : 'outline'}
+                  onClick={() => setFiltroMiembro('viggo')}
+                >
+                  👶
                 </Button>
               </div>
             </div>

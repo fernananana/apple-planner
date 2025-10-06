@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { 
   Plus, 
   Repeat, 
@@ -16,6 +18,8 @@ import {
 } from 'lucide-react';
 import { Tarea, Miembro, TipoRecurrencia, TareasPorDia } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface TasksSectionProps {
   tareas: TareasPorDia;
@@ -32,6 +36,7 @@ const TasksSection = ({ tareas, onTareasChange, miembroActivo }: TasksSectionPro
     categoria: ''
   });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { toast } = useToast();
 
   const todasLasTareas: Tarea[] = Object.values(tareas).flat();
@@ -59,10 +64,10 @@ const TasksSection = ({ tareas, onTareasChange, miembroActivo }: TasksSectionPro
       categoria: nuevaTarea.categoria || undefined
     };
 
-    // Agregar la tarea al día actual
-    const hoy = new Date().getDate();
-    const tareasHoy = tareas[hoy] || [];
-    const nuevasTareas = { ...tareas, [hoy]: [...tareasHoy, tarea] };
+    // Agregar la tarea al día seleccionado
+    const diaSeleccionado = selectedDate.getDate();
+    const tareasDia = tareas[diaSeleccionado] || [];
+    const nuevasTareas = { ...tareas, [diaSeleccionado]: [...tareasDia, tarea] };
     
     onTareasChange(nuevasTareas);
     
@@ -74,10 +79,11 @@ const TasksSection = ({ tareas, onTareasChange, miembroActivo }: TasksSectionPro
       categoria: ''
     });
     setMostrarFormulario(false);
+    setSelectedDate(new Date());
 
     toast({
       title: "Tarea creada",
-      description: `Tarea asignada a ${tarea.miembro}`
+      description: `Tarea asignada a ${tarea.miembro} para el ${format(selectedDate, 'dd/MM/yyyy')}`
     });
   };
 
@@ -196,6 +202,33 @@ const TasksSection = ({ tareas, onTareasChange, miembroActivo }: TasksSectionPro
                   onChange={(e) => setNuevaTarea(prev => ({ ...prev, categoria: e.target.value }))}
                   placeholder="Ej: Cocina, Limpieza, etc."
                 />
+              </div>
+
+              <div>
+                <Label>Fecha de la tarea</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 

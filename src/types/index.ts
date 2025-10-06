@@ -16,6 +16,7 @@ export interface Tarea {
   confirmada?: boolean;
   fecha?: string; // formato YYYY-MM-DD
   archivada?: boolean; // Para eliminación suave - no se muestra pero sigue en estadísticas
+  confirmadaPor?: Miembro; // Quién confirmó la tarea
 }
 
 export type TareasPorDia = Record<number, Tarea[]>;

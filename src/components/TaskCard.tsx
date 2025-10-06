@@ -120,19 +120,25 @@ const TaskCard = ({
     }
   };
 
+  const handleTextClick = useCallback((e: React.MouseEvent) => {
+    if (!isEditing) {
+      e.stopPropagation();
+      startEditing(e);
+    }
+  }, [isEditing, startEditing]);
+
   return (
     <div
       className={`
         relative group p-2 rounded-lg border text-xs
         transition-all duration-200
-        ${!isEditing && 'cursor-pointer hover-lift'}
         ${getMemberStyle()}
         ${isDragging ? 'dragging' : ''}
+        ${tarea.confirmada ? 'ring-2 ring-green-500 ring-opacity-50' : ''}
       `}
       draggable={isDraggable && !isEditing}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onClick={isEditing ? undefined : onEdit}
     >
       <div className="flex items-start gap-2">
         <Checkbox
@@ -161,7 +167,10 @@ const TaskCard = ({
             </div>
           ) : (
             <>
-              <p className={`font-medium leading-tight ${tarea.completada ? 'line-through' : ''}`}>
+              <p 
+                className={`font-medium leading-tight cursor-text ${tarea.completada ? 'line-through' : ''}`}
+                onClick={handleTextClick}
+              >
                 {tarea.texto}
               </p>
               <div className="flex items-center gap-1 mt-1">
@@ -173,6 +182,11 @@ const TaskCard = ({
                 )}
                 {tarea.categoria && (
                   <span className="text-xs opacity-60 ml-1">• {tarea.categoria}</span>
+                )}
+                {tarea.confirmada && (
+                  <span className="text-xs text-green-600 dark:text-green-400 ml-1" title={`Confirmada por ${tarea.confirmadaPor}`}>
+                    ✓ Confirmada
+                  </span>
                 )}
               </div>
             </>
