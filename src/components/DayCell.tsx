@@ -4,7 +4,6 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Miembro, Tarea } from '@/types';
 import { generarId } from '@/lib/calendar-utils';
 import TaskCard from './TaskCard';
-import ConfirmTaskButton from './ConfirmTaskButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
 
 interface DayCellProps {
   day: number;
@@ -70,32 +68,6 @@ const DayCell = ({
     const updatedTareas = tareas.filter(tarea => tarea.id !== tareaId);
     onTareasChange(updatedTareas);
   }, [tareas, onTareasChange]);
-
-  const archiveTarea = useCallback((tareaId: string) => {
-    const updatedTareas = tareas.map(tarea =>
-      tarea.id === tareaId ? { ...tarea, archivada: true } : tarea
-    );
-    onTareasChange(updatedTareas);
-  }, [tareas, onTareasChange]);
-
-  const { toast } = useToast();
-
-  const confirmTarea = useCallback((tareaId: string) => {
-    const updatedTareas = tareas.map(tarea =>
-      tarea.id === tareaId ? { 
-        ...tarea, 
-        confirmada: !tarea.confirmada,
-        confirmadaPor: !tarea.confirmada ? miembroActivo : undefined
-      } : tarea
-    );
-    onTareasChange(updatedTareas);
-    toast({
-      title: updatedTareas.find(t => t.id === tareaId)?.confirmada ? "Tarea confirmada" : "Confirmación eliminada",
-      description: updatedTareas.find(t => t.id === tareaId)?.confirmada 
-        ? `Confirmada por ${miembroActivo}` 
-        : "La confirmación ha sido eliminada"
-    });
-  }, [tareas, miembroActivo, onTareasChange, toast]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -243,25 +215,14 @@ const DayCell = ({
       {/* Lista de tareas */}
       <div className="space-y-1 overflow-y-auto max-h-20">
         {tareas.map((tarea) => (
-          <div key={tarea.id} className="flex items-center gap-1">
-            <div className="flex-1">
-              <TaskCard
-                tarea={tarea}
-                onUpdate={(updates) => updateTarea(tarea.id, updates)}
-                onDelete={() => deleteTarea(tarea.id)}
-                onArchive={() => archiveTarea(tarea.id)}
-                onEdit={() => onEditTarea(tarea)}
-                sourceDay={day}
-              />
-            </div>
-            <ConfirmTaskButton
-              isConfirmed={!!tarea.confirmada}
-              confirmadaPor={tarea.confirmadaPor}
-              currentMiembro={miembroActivo}
-              taskMiembro={tarea.miembro}
-              onConfirm={() => confirmTarea(tarea.id)}
-            />
-          </div>
+          <TaskCard
+            key={tarea.id}
+            tarea={tarea}
+            onUpdate={(updates) => updateTarea(tarea.id, updates)}
+            onDelete={() => deleteTarea(tarea.id)}
+            onEdit={() => onEditTarea(tarea)}
+            sourceDay={day}
+          />
         ))}
       </div>
 

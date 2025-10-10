@@ -5,7 +5,6 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Miembro, Tarea } from '@/types';
 import { generarId } from '@/lib/calendar-utils';
 import TaskCard from './TaskCard';
-import ConfirmTaskButton from './ConfirmTaskButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,24 +65,6 @@ const DayModal = ({
     const updatedTareas = tareas.filter(tarea => tarea.id !== tareaId);
     onTareasChange(updatedTareas);
   }, [tareas, onTareasChange]);
-
-  const archiveTarea = useCallback((tareaId: string) => {
-    const updatedTareas = tareas.map(tarea =>
-      tarea.id === tareaId ? { ...tarea, archivada: true } : tarea
-    );
-    onTareasChange(updatedTareas);
-  }, [tareas, onTareasChange]);
-
-  const confirmTarea = useCallback((tareaId: string) => {
-    const updatedTareas = tareas.map(tarea =>
-      tarea.id === tareaId ? { 
-        ...tarea, 
-        confirmada: !tarea.confirmada,
-        confirmadaPor: !tarea.confirmada ? miembroActivo : undefined
-      } : tarea
-    );
-    onTareasChange(updatedTareas);
-  }, [tareas, miembroActivo, onTareasChange]);
 
   const handleBorrarDia = () => {
     onBorrarDia();
@@ -154,24 +135,14 @@ const DayModal = ({
             </div>
           ) : (
             tareas.map((tarea) => (
-              <div key={tarea.id} className="p-3 border rounded-lg bg-card flex items-start gap-2">
-                <div className="flex-1">
-                  <TaskCard
-                    tarea={tarea}
-                    onUpdate={(updates) => updateTarea(tarea.id, updates)}
-                    onDelete={() => deleteTarea(tarea.id)}
-                    onArchive={() => archiveTarea(tarea.id)}
-                    onEdit={() => onEditTarea(tarea)}
-                    sourceDay={day}
-                    isDraggable={false}
-                  />
-                </div>
-                <ConfirmTaskButton
-                  isConfirmed={!!tarea.confirmada}
-                  confirmadaPor={tarea.confirmadaPor}
-                  currentMiembro={miembroActivo}
-                  taskMiembro={tarea.miembro}
-                  onConfirm={() => confirmTarea(tarea.id)}
+              <div key={tarea.id} className="p-3 border rounded-lg bg-card">
+                <TaskCard
+                  tarea={tarea}
+                  onUpdate={(updates) => updateTarea(tarea.id, updates)}
+                  onDelete={() => deleteTarea(tarea.id)}
+                  onEdit={() => onEditTarea(tarea)}
+                  sourceDay={day}
+                  isDraggable={false}
                 />
               </div>
             ))
