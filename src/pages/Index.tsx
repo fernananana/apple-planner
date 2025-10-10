@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { loadAuth, loadTareas, loadSugeridas, saveTareas, saveSugeridas, saveAuth } from '@/lib/storage';
 import { Miembro, TareasPorDia, Categorias } from '@/types';
 import Login from '@/components/Login';
-import Navigation from '@/components/Navigation';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import Calendar from '@/components/Calendar';
 import Dashboard from '@/components/Dashboard';
 import TasksSection from '@/components/TasksSection';
@@ -103,24 +104,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex flex-col md:flex-row">
-        {/* Navigation */}
-        <div className="md:w-64 md:flex-shrink-0">
-          <div className="md:fixed md:top-4 md:left-4 md:bottom-4 md:w-56">
-            <Navigation
-              currentSection={currentSection}
-              onSectionChange={setCurrentSection}
-            />
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 md:ml-64 p-4 md:p-6">
-          {renderCurrentSection()}
-        </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar
+          currentSection={currentSection}
+          onSectionChange={setCurrentSection}
+        />
+        <SidebarInset>
+          <header className="flex h-16 items-center gap-2 border-b px-4">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">Calendario Familiar 👨‍👩‍👧‍👦</h1>
+          </header>
+          <main className="flex-1 p-4 md:p-6">
+            {renderCurrentSection()}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
